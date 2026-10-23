@@ -9,26 +9,241 @@
         MinHeight="680"
         Width="1280"
         Height="780"
-        WindowStartupLocation="CenterScreen">
+        WindowStartupLocation="CenterScreen"
+        Background="#0B1220"
+        Foreground="#F3F7FB">
     <Window.Resources>
+        <SolidColorBrush x:Key="PanelBrush" Color="#D91A2A40" />
+        <SolidColorBrush x:Key="PanelStrongBrush" Color="#ED1D3049" />
+        <SolidColorBrush x:Key="PanelBorderBrush" Color="#586A8299" />
+        <SolidColorBrush x:Key="ControlBrush" Color="#B31B2B43" />
+        <SolidColorBrush x:Key="ControlHoverBrush" Color="#D12C425B" />
+        <SolidColorBrush x:Key="PrimaryBrush" Color="#23B6AA" />
+        <SolidColorBrush x:Key="PrimaryDarkBrush" Color="#137F81" />
+        <SolidColorBrush x:Key="TextMutedBrush" Color="#AFC0D0" />
+        <SolidColorBrush x:Key="TextSubtleBrush" Color="#8295AA" />
+        <DropShadowEffect x:Key="PanelShadow" Color="#000000" BlurRadius="20" ShadowDepth="4" Opacity="0.28" />
+
         <Style TargetType="Button">
             <Setter Property="Margin" Value="0,0,8,0" />
-            <Setter Property="Padding" Value="12,6" />
-            <Setter Property="MinHeight" Value="32" />
+            <Setter Property="Padding" Value="13,7" />
+            <Setter Property="MinHeight" Value="34" />
+            <Setter Property="Foreground" Value="#F4FAFF" />
+            <Setter Property="Background" Value="{StaticResource ControlBrush}" />
+            <Setter Property="BorderBrush" Value="#668BA3B8" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="ButtonBorder"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="7"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                              VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                                              RecognizesAccessKey="True" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="ButtonBorder" Property="Background" Value="{StaticResource ControlHoverBrush}" />
+                                <Setter TargetName="ButtonBorder" Property="BorderBrush" Value="{StaticResource PrimaryBrush}" />
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="ButtonBorder" Property="Background" Value="{StaticResource PrimaryDarkBrush}" />
+                            </Trigger>
+                            <Trigger Property="IsKeyboardFocused" Value="True">
+                                <Setter TargetName="ButtonBorder" Property="BorderBrush" Value="#D7FFFA" />
+                                <Setter TargetName="ButtonBorder" Property="BorderThickness" Value="2" />
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="ButtonBorder" Property="Opacity" Value="0.45" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
         </Style>
+
+        <Style TargetType="TextBox">
+            <Setter Property="MinHeight" Value="34" />
+            <Setter Property="Padding" Value="10,6" />
+            <Setter Property="Foreground" Value="#F4FAFF" />
+            <Setter Property="CaretBrush" Value="#F4FAFF" />
+            <Setter Property="Background" Value="{StaticResource ControlBrush}" />
+            <Setter Property="BorderBrush" Value="#5E7B91A8" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TextBox">
+                        <Border x:Name="TextBoxBorder"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="7">
+                            <ScrollViewer x:Name="PART_ContentHost" Margin="{TemplateBinding Padding}" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsKeyboardFocused" Value="True">
+                                <Setter TargetName="TextBoxBorder" Property="BorderBrush" Value="{StaticResource PrimaryBrush}" />
+                                <Setter TargetName="TextBoxBorder" Property="BorderThickness" Value="2" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style TargetType="CheckBox">
+            <Setter Property="Foreground" Value="{StaticResource TextMutedBrush}" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Padding" Value="4,2" />
+            <Setter Property="Cursor" Value="Hand" />
+        </Style>
+
         <Style TargetType="GroupBox">
-            <Setter Property="Margin" Value="0,0,8,0" />
-            <Setter Property="Padding" Value="8" />
+            <Setter Property="Margin" Value="0,0,10,0" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="Foreground" Value="#F4FAFF" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Effect" Value="{StaticResource PanelShadow}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="GroupBox">
+                        <Border Background="{StaticResource PanelBrush}"
+                                BorderBrush="{StaticResource PanelBorderBrush}"
+                                BorderThickness="1"
+                                CornerRadius="8">
+                            <DockPanel>
+                                <Border DockPanel.Dock="Top"
+                                        Background="#351C3A55"
+                                        BorderBrush="#3D69839B"
+                                        BorderThickness="0,0,0,1"
+                                        Padding="13,10">
+                                    <ContentPresenter ContentSource="Header" TextElement.Foreground="{TemplateBinding Foreground}" />
+                                </Border>
+                                <ContentPresenter Margin="12,11,12,12" />
+                            </DockPanel>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style TargetType="ListBox">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Foreground" Value="#EAF3FA" />
+            <Setter Property="Padding" Value="0" />
+        </Style>
+
+        <Style TargetType="ListBoxItem">
+            <Setter Property="Padding" Value="10,9" />
+            <Setter Property="Margin" Value="0,0,0,4" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Foreground" Value="#EAF3FA" />
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ListBoxItem">
+                        <Border x:Name="ItemBorder"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="Transparent"
+                                BorderThickness="1"
+                                CornerRadius="6"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="ItemBorder" Property="Background" Value="#55294459" />
+                            </Trigger>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="ItemBorder" Property="Background" Value="#88307D82" />
+                                <Setter TargetName="ItemBorder" Property="BorderBrush" Value="{StaticResource PrimaryBrush}" />
+                            </Trigger>
+                            <Trigger Property="IsKeyboardFocusWithin" Value="True">
+                                <Setter TargetName="ItemBorder" Property="BorderBrush" Value="#9EE9E4" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style TargetType="DataGrid">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Foreground" Value="#EAF3FA" />
+            <Setter Property="BorderBrush" Value="#4E6A8196" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="RowBackground" Value="#22182A40" />
+            <Setter Property="AlternatingRowBackground" Value="#351E3046" />
+            <Setter Property="HorizontalGridLinesBrush" Value="#36516A7D" />
+            <Setter Property="VerticalGridLinesBrush" Value="Transparent" />
+            <Setter Property="HeadersVisibility" Value="Column" />
+            <Setter Property="CanUserResizeRows" Value="False" />
+        </Style>
+
+        <Style TargetType="DataGridColumnHeader">
+            <Setter Property="Background" Value="#8C28445C" />
+            <Setter Property="Foreground" Value="#F7FBFF" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Padding" Value="9,8" />
+            <Setter Property="BorderBrush" Value="#4A6B8499" />
+            <Setter Property="BorderThickness" Value="0,0,0,1" />
+        </Style>
+
+        <Style TargetType="DataGridRow">
+            <Setter Property="Foreground" Value="#EAF3FA" />
+            <Setter Property="MinHeight" Value="34" />
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#56317A84" />
+                </Trigger>
+                <Trigger Property="IsSelected" Value="True">
+                    <Setter Property="Background" Value="#9A267B82" />
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style TargetType="DataGridCell">
+            <Setter Property="Padding" Value="8,5" />
+            <Setter Property="BorderBrush" Value="Transparent" />
+            <Setter Property="Foreground" Value="#EAF3FA" />
+            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+        </Style>
+
+        <Style TargetType="TextBlock">
+            <Setter Property="Foreground" Value="#EAF3FA" />
         </Style>
     </Window.Resources>
-    <DockPanel Margin="12">
-        <Border DockPanel.Dock="Top" Padding="0,0,0,10" BorderBrush="#D6D9DE" BorderThickness="0,0,0,1">
+
+    <DockPanel Margin="18">
+        <Border DockPanel.Dock="Top"
+                Background="{StaticResource PanelStrongBrush}"
+                BorderBrush="{StaticResource PanelBorderBrush}"
+                BorderThickness="1"
+                CornerRadius="8"
+                Padding="14"
+                Effect="{StaticResource PanelShadow}">
             <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
                 <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="260" />
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
-                <StackPanel Orientation="Horizontal">
+                <StackPanel Grid.RowSpan="2" VerticalAlignment="Center" Margin="0,0,20,0">
+                    <TextBlock Text="WORKSHOP SYNC" FontSize="18" FontWeight="Bold" Foreground="#8DE8E0" />
+                    <TextBlock Text="Steam Mod 清单同步工具" Margin="0,4,0,0" Foreground="{StaticResource TextMutedBrush}" />
+                </StackPanel>
+                <WrapPanel Grid.Column="1" Grid.ColumnSpan="2" HorizontalAlignment="Right">
                     <Button Content="重新扫描" Click="RefreshScan_Click" />
                     <Button Content="导入文件" Click="ImportFile_Click" />
                     <Button Content="粘贴导入" Click="PasteImport_Click" />
@@ -37,19 +252,23 @@
                     <Button Content="备份数据" Click="Backup_Click" />
                     <Button Content="恢复数据" Click="Restore_Click" />
                     <Button Content="复制失败清单" Click="CopyFailures_Click" />
-                    <Button Content="导出失败清单" Click="ExportFailures_Click" />
-                </StackPanel>
-                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Button Content="导出失败清单" Click="ExportFailures_Click" Margin="0" />
+                </WrapPanel>
+                <StackPanel Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,12,0,0">
                     <CheckBox x:Name="DeveloperModeCheckBox" Content="开发者模式" VerticalAlignment="Center" Margin="0,0,12,0" Click="DeveloperMode_Click" ToolTip="开启后记录详细运行日志；错误和警告始终记录。" />
                     <Button Content="查看日志" Click="ViewLogs_Click" />
-                    <Button Content="关于" Click="About_Click" />
-                    <TextBlock Text="状态：" FontWeight="SemiBold" />
-                    <TextBlock Text="{Binding StatusText}" TextWrapping="Wrap" MaxWidth="430" />
+                    <Button Content="关于" Click="About_Click" Margin="0" />
                 </StackPanel>
+                <Border Grid.Row="1" Grid.Column="0" Background="#3D142A3D" CornerRadius="6" Padding="10,7" Margin="0,12,20,0">
+                    <TextBlock TextWrapping="Wrap">
+                        <Run Text="状态  " FontWeight="SemiBold" Foreground="#8DE8E0" />
+                        <Run Text="{Binding StatusText}" Foreground="{StaticResource TextMutedBrush}" />
+                    </TextBlock>
+                </Border>
             </Grid>
         </Border>
 
-        <Grid Margin="0,10,0,0">
+        <Grid Margin="0,14,0,0">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="230" />
                 <ColumnDefinition Width="270" />
@@ -58,7 +277,7 @@
 
             <GroupBox Header="Steam 游戏">
                 <DockPanel>
-                    <TextBlock DockPanel.Dock="Bottom" Margin="0,8,0,0" Foreground="#666" Text="启动时自动扫描，也可手动刷新。" TextWrapping="Wrap" />
+                    <TextBlock DockPanel.Dock="Bottom" Margin="0,8,0,0" Foreground="{StaticResource TextSubtleBrush}" Text="启动时自动扫描，也可手动刷新。" TextWrapping="Wrap" />
                     <TextBox x:Name="GameSearchBox"
                              DockPanel.Dock="Top"
                              Margin="0,0,0,8"
@@ -82,7 +301,7 @@
                         <Button Content="编辑预设" Click="EditPreset_Click" />
                         <Button Content="打开回收站" Click="RecycleBin_Click" />
                         <Button Content="操作历史" Click="History_Click" />
-                        <Button Content="撤回最近批次" Click="UndoLatest_Click" />
+                        <Button Content="撤回最近批次" Click="UndoLatest_Click" Margin="0" />
                     </StackPanel>
                     <ListBox x:Name="PresetsList" ItemsSource="{Binding Presets}" SelectionChanged="PresetsList_SelectionChanged" DisplayMemberPath="Name" />
                 </DockPanel>
@@ -95,16 +314,16 @@
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
-                        <StackPanel Orientation="Horizontal">
+                        <WrapPanel>
                             <Button Content="同步所选" Click="SyncSelected_Click" />
                             <Button Content="切换忽略" Click="ToggleIgnore_Click" />
                             <Button Content="暂停" Click="PauseQueue_Click" />
                             <Button Content="继续" Click="ResumeQueue_Click" />
-                            <Button Content="停止后续" Click="StopQueue_Click" />
-                        </StackPanel>
-                        <TextBlock Grid.Column="1" VerticalAlignment="Center" Text="{Binding SelectionSummary}" Foreground="#666" />
+                            <Button Content="停止后续" Click="StopQueue_Click" Margin="0" />
+                        </WrapPanel>
+                        <TextBlock Grid.Column="1" VerticalAlignment="Center" Text="{Binding SelectionSummary}" Foreground="{StaticResource TextSubtleBrush}" />
                     </Grid>
-                    <TextBlock DockPanel.Dock="Top" Margin="0,0,0,8" Text="导入或切换预设后，先勾选要订阅/取消订阅的项目，再执行同步。Steam 结果需要重新扫描确认。" TextWrapping="Wrap" Foreground="#555" />
+                    <TextBlock DockPanel.Dock="Top" Margin="0,0,0,8" Text="导入或切换预设后，先勾选要订阅/取消订阅的项目，再执行同步。Steam 结果需要重新扫描确认。" TextWrapping="Wrap" Foreground="{StaticResource TextMutedBrush}" />
                     <DataGrid x:Name="DiffGrid"
                               ItemsSource="{Binding DiffRows}"
                               AutoGenerateColumns="False"
@@ -114,8 +333,8 @@
                               HeadersVisibility="Column"
                               GridLinesVisibility="Horizontal"
                               SelectionMode="Extended"
-                               CurrentCellChanged="DiffGrid_CurrentCellChanged"
-                               ContextMenuOpening="DiffGrid_ContextMenuOpening">
+                              CurrentCellChanged="DiffGrid_CurrentCellChanged"
+                              ContextMenuOpening="DiffGrid_ContextMenuOpening">
                         <DataGrid.Columns>
                             <DataGridCheckBoxColumn Header="选择" Width="52" Binding="{Binding IsSelected, UpdateSourceTrigger=PropertyChanged}" />
                             <DataGridTextColumn Header="状态" Width="120" Binding="{Binding StatusText}" IsReadOnly="True" />

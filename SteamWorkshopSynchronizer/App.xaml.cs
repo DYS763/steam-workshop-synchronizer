@@ -1,6 +1,7 @@
 ﻿using System.Configuration;
 using System.Data;
 using System.Windows;
+using System.Windows.Threading;
 using SteamWorkshopSynchronizer.Infrastructure.Diagnostics;
 
 namespace SteamWorkshopSynchronizer;
@@ -11,6 +12,11 @@ namespace SteamWorkshopSynchronizer;
 public partial class App : System.Windows.Application
 {
     public static SteamWorkshopSynchronizer.Application.AppServices Services { get; private set; } = null!;
+
+    public App()
+    {
+        DispatcherUnhandledException += App_DispatcherUnhandledException;
+    }
 
     protected override void OnStartup(StartupEventArgs e)
     {
@@ -40,6 +46,28 @@ public partial class App : System.Windows.Application
         }
 
         base.OnStartup(e);
+    }
+
+    private void App_DispatcherUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)
+    {
+        try
+        {
+            if (Services is not null)
+            {
+                Services.Logger.Error("未处理异常", "WPF UI 线程发生未处理异常", e.Exception);
+            }
+        }
+        catch
+        {
+            // Keep the fallback error dialog available even if the logger itself is unavailable.
+        }
+
+        MessageBox.Show(
+            $"程序遇到未处理错误：{e.Exception.Message}\n\n详细信息已写入日志（如果日志目录可用）。",
+            "运行错误",
+            MessageBoxButton.OK,
+            MessageBoxImage.Error);
+        e.Handled = true;
     }
 }
 

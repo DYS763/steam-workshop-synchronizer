@@ -18,6 +18,12 @@ Windows 10/11 桌面工具，用于在联机玩家之间交换 Steam Workshop Mo
 
 工具数据保存于 `%LOCALAPPDATA%\\SteamWorkshopSynchronizer\\data.db`。备份包含游戏绑定和库路径、预设及版本、回收站、操作历史和工具设置；不包含 Steam 登录信息、Workshop 文件本体或临时执行队列。
 
+## 开发者模式与日志
+
+主窗口顶部的“开发者模式”默认关闭，开关状态会保存到工具设置。关闭时只记录警告和错误；开启后会额外记录启动、扫描、数据库写入、预设/备份、导入导出、Steam 协议和操作队列的详细过程。日志不会记录密码、令牌或 Steam Web API Key。
+
+日志按天写入 `%LOCALAPPDATA%\\SteamWorkshopSynchronizer\\logs\\app-YYYYMMDD.log`，包含 UTC 时间、级别、分类、线程号、消息和异常堆栈，默认保留最近 14 天。工具中的“查看日志”可以刷新、复制当前日志、打开目录或清空当天日志。日志写入失败不会阻断扫描、导入或同步操作。
+
 ## 本地构建
 
 需要 .NET 8 SDK 和 Windows Desktop Runtime：

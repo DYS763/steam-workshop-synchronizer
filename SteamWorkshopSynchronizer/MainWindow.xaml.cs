@@ -337,7 +337,10 @@ public partial class MainWindow : Window, INotifyPropertyChanged
 
     private void DiffGrid_ContextMenuOpening(object sender, ContextMenuEventArgs e)
     {
-        if (e.OriginalSource is not DataGridRow row || row.Item is not DiffRow)
+        var row = e.OriginalSource is DependencyObject source
+            ? ItemsControl.ContainerFromElement(DiffGrid, source) as DataGridRow
+            : null;
+        if (row?.Item is not DiffRow)
         {
             e.Handled = true;
             return;

@@ -10,27 +10,29 @@
         Width="1280"
         Height="780"
         WindowStartupLocation="CenterScreen"
-        Background="#0B1220"
-        Foreground="#F3F7FB">
+        Background="#DCECF2"
+        Foreground="#173B50">
     <Window.Resources>
-        <SolidColorBrush x:Key="PanelBrush" Color="#D91A2A40" />
-        <SolidColorBrush x:Key="PanelStrongBrush" Color="#ED1D3049" />
-        <SolidColorBrush x:Key="PanelBorderBrush" Color="#586A8299" />
-        <SolidColorBrush x:Key="ControlBrush" Color="#B31B2B43" />
-        <SolidColorBrush x:Key="ControlHoverBrush" Color="#D12C425B" />
-        <SolidColorBrush x:Key="PrimaryBrush" Color="#23B6AA" />
-        <SolidColorBrush x:Key="PrimaryDarkBrush" Color="#137F81" />
-        <SolidColorBrush x:Key="TextMutedBrush" Color="#AFC0D0" />
-        <SolidColorBrush x:Key="TextSubtleBrush" Color="#8295AA" />
-        <DropShadowEffect x:Key="PanelShadow" Color="#000000" BlurRadius="20" ShadowDepth="4" Opacity="0.28" />
+        <SolidColorBrush x:Key="GlassPanelBrush" Color="#BFFFFFFF" />
+        <SolidColorBrush x:Key="GlassPanelStrongBrush" Color="#E8FFFFFF" />
+        <SolidColorBrush x:Key="GlassBorderBrush" Color="#A3B7C6" />
+        <SolidColorBrush x:Key="GlassHighlightBrush" Color="#F3FFFFFF" />
+        <SolidColorBrush x:Key="ControlBrush" Color="#B8FFFFFF" />
+        <SolidColorBrush x:Key="ControlHoverBrush" Color="#E8F4F6" />
+        <SolidColorBrush x:Key="PrimaryBrush" Color="#0B858D" />
+        <SolidColorBrush x:Key="PrimaryLightBrush" Color="#D7F2EF" />
+        <SolidColorBrush x:Key="TextBrush" Color="#173B50" />
+        <SolidColorBrush x:Key="TextMutedBrush" Color="#506A7A" />
+        <SolidColorBrush x:Key="TextSubtleBrush" Color="#6D8290" />
+        <DropShadowEffect x:Key="GlassShadow" Color="#537082" BlurRadius="18" ShadowDepth="3" Opacity="0.2" />
 
         <Style TargetType="Button">
             <Setter Property="Margin" Value="0,0,8,0" />
             <Setter Property="Padding" Value="13,7" />
             <Setter Property="MinHeight" Value="34" />
-            <Setter Property="Foreground" Value="#F4FAFF" />
+            <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
             <Setter Property="Background" Value="{StaticResource ControlBrush}" />
-            <Setter Property="BorderBrush" Value="#668BA3B8" />
+            <Setter Property="BorderBrush" Value="#9FB7C5" />
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="FontWeight" Value="SemiBold" />
             <Setter Property="Cursor" Value="Hand" />
@@ -53,14 +55,14 @@
                                 <Setter TargetName="ButtonBorder" Property="BorderBrush" Value="{StaticResource PrimaryBrush}" />
                             </Trigger>
                             <Trigger Property="IsPressed" Value="True">
-                                <Setter TargetName="ButtonBorder" Property="Background" Value="{StaticResource PrimaryDarkBrush}" />
+                                <Setter TargetName="ButtonBorder" Property="Background" Value="{StaticResource PrimaryLightBrush}" />
                             </Trigger>
                             <Trigger Property="IsKeyboardFocused" Value="True">
-                                <Setter TargetName="ButtonBorder" Property="BorderBrush" Value="#D7FFFA" />
+                                <Setter TargetName="ButtonBorder" Property="BorderBrush" Value="{StaticResource PrimaryBrush}" />
                                 <Setter TargetName="ButtonBorder" Property="BorderThickness" Value="2" />
                             </Trigger>
                             <Trigger Property="IsEnabled" Value="False">
-                                <Setter TargetName="ButtonBorder" Property="Opacity" Value="0.45" />
+                                <Setter TargetName="ButtonBorder" Property="Opacity" Value="0.5" />
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -71,10 +73,10 @@
         <Style TargetType="TextBox">
             <Setter Property="MinHeight" Value="34" />
             <Setter Property="Padding" Value="10,6" />
-            <Setter Property="Foreground" Value="#F4FAFF" />
-            <Setter Property="CaretBrush" Value="#F4FAFF" />
+            <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
+            <Setter Property="CaretBrush" Value="{StaticResource TextBrush}" />
             <Setter Property="Background" Value="{StaticResource ControlBrush}" />
-            <Setter Property="BorderBrush" Value="#5E7B91A8" />
+            <Setter Property="BorderBrush" Value="#9FB7C5" />
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="Template">
                 <Setter.Value>
@@ -104,28 +106,40 @@
             <Setter Property="Cursor" Value="Hand" />
         </Style>
 
-        <Style TargetType="GroupBox">
-            <Setter Property="Margin" Value="0,0,10,0" />
+        <Style TargetType="Menu">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
             <Setter Property="Padding" Value="0" />
-            <Setter Property="Foreground" Value="#F4FAFF" />
+        </Style>
+
+        <Style TargetType="MenuItem">
+            <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
+            <Setter Property="Padding" Value="12,8" />
             <Setter Property="FontWeight" Value="SemiBold" />
-            <Setter Property="Effect" Value="{StaticResource PanelShadow}" />
+        </Style>
+
+        <Style TargetType="GroupBox">
+            <Setter Property="Margin" Value="0,0,12,0" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Effect" Value="{StaticResource GlassShadow}" />
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="GroupBox">
-                        <Border Background="{StaticResource PanelBrush}"
-                                BorderBrush="{StaticResource PanelBorderBrush}"
+                        <Border Background="{StaticResource GlassPanelBrush}"
+                                BorderBrush="{StaticResource GlassBorderBrush}"
                                 BorderThickness="1"
-                                CornerRadius="8">
+                                CornerRadius="9">
                             <DockPanel>
                                 <Border DockPanel.Dock="Top"
-                                        Background="#351C3A55"
-                                        BorderBrush="#3D69839B"
+                                        Background="{StaticResource GlassPanelStrongBrush}"
+                                        BorderBrush="{StaticResource GlassHighlightBrush}"
                                         BorderThickness="0,0,0,1"
-                                        Padding="13,10">
+                                        Padding="14,11">
                                     <ContentPresenter ContentSource="Header" TextElement.Foreground="{TemplateBinding Foreground}" />
                                 </Border>
-                                <ContentPresenter Margin="12,11,12,12" />
+                                <ContentPresenter Margin="13,12,13,13" />
                             </DockPanel>
                         </Border>
                     </ControlTemplate>
@@ -136,7 +150,7 @@
         <Style TargetType="ListBox">
             <Setter Property="Background" Value="Transparent" />
             <Setter Property="BorderThickness" Value="0" />
-            <Setter Property="Foreground" Value="#EAF3FA" />
+            <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
             <Setter Property="Padding" Value="0" />
         </Style>
 
@@ -144,7 +158,7 @@
             <Setter Property="Padding" Value="10,9" />
             <Setter Property="Margin" Value="0,0,0,4" />
             <Setter Property="Background" Value="Transparent" />
-            <Setter Property="Foreground" Value="#EAF3FA" />
+            <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
             <Setter Property="HorizontalContentAlignment" Value="Stretch" />
             <Setter Property="Template">
                 <Setter.Value>
@@ -159,14 +173,14 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="ItemBorder" Property="Background" Value="#55294459" />
+                                <Setter TargetName="ItemBorder" Property="Background" Value="#BFE4F0F3" />
                             </Trigger>
                             <Trigger Property="IsSelected" Value="True">
-                                <Setter TargetName="ItemBorder" Property="Background" Value="#88307D82" />
+                                <Setter TargetName="ItemBorder" Property="Background" Value="#A9D6EFEC" />
                                 <Setter TargetName="ItemBorder" Property="BorderBrush" Value="{StaticResource PrimaryBrush}" />
                             </Trigger>
                             <Trigger Property="IsKeyboardFocusWithin" Value="True">
-                                <Setter TargetName="ItemBorder" Property="BorderBrush" Value="#9EE9E4" />
+                                <Setter TargetName="ItemBorder" Property="BorderBrush" Value="#6EABB3" />
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -175,36 +189,36 @@
         </Style>
 
         <Style TargetType="DataGrid">
-            <Setter Property="Background" Value="Transparent" />
-            <Setter Property="Foreground" Value="#EAF3FA" />
-            <Setter Property="BorderBrush" Value="#4E6A8196" />
+            <Setter Property="Background" Value="#66FFFFFF" />
+            <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
+            <Setter Property="BorderBrush" Value="#9FB7C5" />
             <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="RowBackground" Value="#22182A40" />
-            <Setter Property="AlternatingRowBackground" Value="#351E3046" />
-            <Setter Property="HorizontalGridLinesBrush" Value="#36516A7D" />
+            <Setter Property="RowBackground" Value="#65FFFFFF" />
+            <Setter Property="AlternatingRowBackground" Value="#46E9F3F5" />
+            <Setter Property="HorizontalGridLinesBrush" Value="#4CABC1C8" />
             <Setter Property="VerticalGridLinesBrush" Value="Transparent" />
             <Setter Property="HeadersVisibility" Value="Column" />
             <Setter Property="CanUserResizeRows" Value="False" />
         </Style>
 
         <Style TargetType="DataGridColumnHeader">
-            <Setter Property="Background" Value="#8C28445C" />
-            <Setter Property="Foreground" Value="#F7FBFF" />
-            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Background" Value="#CFE5F0F2" />
+            <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
+            <Setter Property="FontWeight" Value="Bold" />
             <Setter Property="Padding" Value="9,8" />
-            <Setter Property="BorderBrush" Value="#4A6B8499" />
+            <Setter Property="BorderBrush" Value="#9FB7C5" />
             <Setter Property="BorderThickness" Value="0,0,0,1" />
         </Style>
 
         <Style TargetType="DataGridRow">
-            <Setter Property="Foreground" Value="#EAF3FA" />
-            <Setter Property="MinHeight" Value="34" />
+            <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
+            <Setter Property="MinHeight" Value="35" />
             <Style.Triggers>
                 <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="Background" Value="#56317A84" />
+                    <Setter Property="Background" Value="#B8DCEEEF" />
                 </Trigger>
                 <Trigger Property="IsSelected" Value="True">
-                    <Setter Property="Background" Value="#9A267B82" />
+                    <Setter Property="Background" Value="#B5BFE8E4" />
                 </Trigger>
             </Style.Triggers>
         </Style>
@@ -212,139 +226,134 @@
         <Style TargetType="DataGridCell">
             <Setter Property="Padding" Value="8,5" />
             <Setter Property="BorderBrush" Value="Transparent" />
-            <Setter Property="Foreground" Value="#EAF3FA" />
+            <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
             <Setter Property="FocusVisualStyle" Value="{x:Null}" />
         </Style>
 
         <Style TargetType="TextBlock">
-            <Setter Property="Foreground" Value="#EAF3FA" />
+            <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
         </Style>
     </Window.Resources>
 
-    <DockPanel Margin="18">
-        <Border DockPanel.Dock="Top"
-                Background="{StaticResource PanelStrongBrush}"
-                BorderBrush="{StaticResource PanelBorderBrush}"
-                BorderThickness="1"
-                CornerRadius="8"
-                Padding="14"
-                Effect="{StaticResource PanelShadow}">
-            <Grid>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="Auto" />
-                </Grid.RowDefinitions>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="260" />
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="Auto" />
-                </Grid.ColumnDefinitions>
-                <StackPanel Grid.RowSpan="2" VerticalAlignment="Center" Margin="0,0,20,0">
-                    <TextBlock Text="WORKSHOP SYNC" FontSize="18" FontWeight="Bold" Foreground="#8DE8E0" />
-                    <TextBlock Text="Steam Mod 清单同步工具" Margin="0,4,0,0" Foreground="{StaticResource TextMutedBrush}" />
-                </StackPanel>
-                <WrapPanel Grid.Column="1" Grid.ColumnSpan="2" HorizontalAlignment="Right">
-                    <Button Content="重新扫描" Click="RefreshScan_Click" />
-                    <Button Content="导入文件" Click="ImportFile_Click" />
-                    <Button Content="粘贴导入" Click="PasteImport_Click" />
-                    <Button Content="导出 JSON" Click="ExportJson_Click" />
-                    <Button Content="复制压缩文本" Click="CopyCompressed_Click" />
-                    <Button Content="备份数据" Click="Backup_Click" />
-                    <Button Content="恢复数据" Click="Restore_Click" />
-                    <Button Content="复制失败清单" Click="CopyFailures_Click" />
-                    <Button Content="导出失败清单" Click="ExportFailures_Click" Margin="0" />
-                </WrapPanel>
-                <StackPanel Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,12,0,0">
-                    <CheckBox x:Name="DeveloperModeCheckBox" Content="开发者模式" VerticalAlignment="Center" Margin="0,0,12,0" Click="DeveloperMode_Click" ToolTip="开启后记录详细运行日志；错误和警告始终记录。" />
-                    <Button Content="查看日志" Click="ViewLogs_Click" />
-                    <Button Content="关于" Click="About_Click" Margin="0" />
-                </StackPanel>
-                <Border Grid.Row="1" Grid.Column="0" Background="#3D142A3D" CornerRadius="6" Padding="10,7" Margin="0,12,20,0">
-                    <TextBlock TextWrapping="Wrap">
-                        <Run Text="状态  " FontWeight="SemiBold" Foreground="#8DE8E0" />
-                        <Run Text="{Binding StatusText, Mode=OneWay}" Foreground="{StaticResource TextMutedBrush}" />
-                    </TextBlock>
-                </Border>
-            </Grid>
-        </Border>
-
-        <Grid Margin="0,14,0,0">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="230" />
-                <ColumnDefinition Width="270" />
-                <ColumnDefinition Width="*" />
-            </Grid.ColumnDefinitions>
-
-            <GroupBox Header="Steam 游戏">
-                <DockPanel>
-                    <TextBlock DockPanel.Dock="Bottom" Margin="0,8,0,0" Foreground="{StaticResource TextSubtleBrush}" Text="启动时自动扫描，也可手动刷新。" TextWrapping="Wrap" />
-                    <TextBox x:Name="GameSearchBox"
-                             DockPanel.Dock="Top"
-                             Margin="0,0,0,8"
-                             ToolTip="按游戏名称或 AppID 模糊搜索"
-                             TextChanged="GameSearchBox_TextChanged" />
-                    <CheckBox x:Name="OnlyGamesWithModsCheckBox"
-                              DockPanel.Dock="Top"
-                              Content="只显示有 Mod 的游戏"
-                              Margin="0,0,0,8"
-                              Click="OnlyGamesWithMods_Click" />
-                    <ListBox x:Name="GamesList" ItemsSource="{Binding Games}" SelectionChanged="GamesList_SelectionChanged" DisplayMemberPath="DisplayName" />
-                </DockPanel>
-            </GroupBox>
-
-            <GroupBox Grid.Column="1" Header="预设">
-                <DockPanel>
-                    <StackPanel DockPanel.Dock="Bottom" Margin="0,8,0,0">
-                        <Button Content="新建预设" Click="CreatePreset_Click" />
-                        <Button Content="导出当前订阅" Click="ExportCurrent_Click" />
-                        <Button Content="预设版本" Click="PresetVersions_Click" />
-                        <Button Content="编辑预设" Click="EditPreset_Click" />
-                        <Button Content="打开回收站" Click="RecycleBin_Click" />
-                        <Button Content="操作历史" Click="History_Click" />
-                        <Button Content="撤回最近批次" Click="UndoLatest_Click" Margin="0" />
+    <Border Margin="18"
+            Background="#55FFFFFF"
+            BorderBrush="#90FFFFFF"
+            BorderThickness="1"
+            CornerRadius="14"
+            Padding="14"
+            Effect="{StaticResource GlassShadow}">
+        <DockPanel>
+            <Border DockPanel.Dock="Top"
+                    Background="{StaticResource GlassPanelStrongBrush}"
+                    BorderBrush="{StaticResource GlassBorderBrush}"
+                    BorderThickness="1"
+                    CornerRadius="9"
+                    Padding="16"
+                    Margin="0,0,0,14">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel>
+                        <TextBlock Text="WORKSHOP SYNC" FontSize="20" FontWeight="Bold" Foreground="{StaticResource PrimaryBrush}" />
+                        <TextBlock Text="Steam Mod 清单同步工具" Margin="0,4,0,0" Foreground="{StaticResource TextMutedBrush}" />
                     </StackPanel>
-                    <ListBox x:Name="PresetsList" ItemsSource="{Binding Presets}" SelectionChanged="PresetsList_SelectionChanged" DisplayMemberPath="Name" />
-                </DockPanel>
-            </GroupBox>
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                        <Button Content="扫描" Width="88" Background="{StaticResource PrimaryLightBrush}" BorderBrush="{StaticResource PrimaryBrush}" Foreground="{StaticResource PrimaryBrush}" Click="RefreshScan_Click" />
+                        <Button Content="导入" Width="88" Background="{StaticResource PrimaryLightBrush}" BorderBrush="{StaticResource PrimaryBrush}" Foreground="{StaticResource PrimaryBrush}" Click="ImportFile_Click" />
+                        <Menu VerticalAlignment="Center">
+                            <MenuItem Header="更多">
+                                <MenuItem Header="粘贴导入" Click="PasteImport_Click" />
+                                <Separator />
+                                <MenuItem Header="导出 JSON" Click="ExportJson_Click" />
+                                <MenuItem Header="复制压缩文本" Click="CopyCompressed_Click" />
+                                <Separator />
+                                <MenuItem Header="备份数据" Click="Backup_Click" />
+                                <MenuItem Header="恢复数据" Click="Restore_Click" />
+                                <Separator />
+                                <MenuItem Header="复制失败清单" Click="CopyFailures_Click" />
+                                <MenuItem Header="导出失败清单" Click="ExportFailures_Click" />
+                                <MenuItem Header="查看日志" Click="ViewLogs_Click" />
+                                <MenuItem Header="关于" Click="About_Click" />
+                                <Separator />
+                                <MenuItem x:Name="DeveloperModeMenuItem" Header="开发者模式" IsCheckable="True" Click="DeveloperMode_Click" ToolTip="开启后记录详细运行日志；错误和警告始终记录。" />
+                            </MenuItem>
+                        </Menu>
+                    </StackPanel>
+                    <Border Grid.Row="1" Grid.ColumnSpan="2" Background="#70DDEEF0" CornerRadius="6" Padding="10,7" Margin="0,14,0,0">
+                        <TextBlock TextWrapping="Wrap">
+                            <Run Text="状态  " FontWeight="Bold" Foreground="{StaticResource PrimaryBrush}" />
+                            <Run Text="{Binding StatusText, Mode=OneWay}" Foreground="{StaticResource TextMutedBrush}" />
+                        </TextBlock>
+                    </Border>
+                </Grid>
+            </Border>
 
-            <GroupBox Grid.Column="2" Header="Mod 差异与状态" Margin="0">
-                <DockPanel>
-                    <Grid DockPanel.Dock="Bottom" Margin="0,10,0,0">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="Auto" />
-                        </Grid.ColumnDefinitions>
-                        <WrapPanel>
-                            <Button Content="同步所选" Click="SyncSelected_Click" />
-                            <Button Content="切换忽略" Click="ToggleIgnore_Click" />
-                            <Button Content="暂停" Click="PauseQueue_Click" />
-                            <Button Content="继续" Click="ResumeQueue_Click" />
-                            <Button Content="停止后续" Click="StopQueue_Click" Margin="0" />
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="240" />
+                    <ColumnDefinition Width="280" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <GroupBox Header="Steam 游戏">
+                    <DockPanel>
+                        <TextBlock DockPanel.Dock="Bottom" Margin="0,8,0,0" Foreground="{StaticResource TextSubtleBrush}" Text="启动时自动扫描，也可点击顶部扫描。" TextWrapping="Wrap" />
+                        <TextBox x:Name="GameSearchBox" DockPanel.Dock="Top" Margin="0,0,0,8" ToolTip="按游戏名称或 AppID 模糊搜索" TextChanged="GameSearchBox_TextChanged" />
+                        <CheckBox x:Name="OnlyGamesWithModsCheckBox" DockPanel.Dock="Top" Content="只显示有 Mod 的游戏" Margin="0,0,0,8" Click="OnlyGamesWithMods_Click" />
+                        <ListBox x:Name="GamesList" ItemsSource="{Binding Games}" SelectionChanged="GamesList_SelectionChanged" DisplayMemberPath="DisplayName" />
+                    </DockPanel>
+                </GroupBox>
+
+                <GroupBox Grid.Column="1" Header="预设">
+                    <DockPanel>
+                        <WrapPanel DockPanel.Dock="Bottom" Margin="0,10,0,0">
+                            <Button Content="新建" Click="CreatePreset_Click" />
+                            <Button Content="编辑" Click="EditPreset_Click" />
+                            <Button Content="版本" Click="PresetVersions_Click" Margin="0" />
+                            <Button Content="导出当前订阅" Click="ExportCurrent_Click" />
+                            <Button Content="回收站" Click="RecycleBin_Click" />
+                            <Button Content="操作历史" Click="History_Click" />
+                            <Button Content="撤回最近批次" Click="UndoLatest_Click" Margin="0" />
                         </WrapPanel>
-                        <TextBlock Grid.Column="1" VerticalAlignment="Center" Text="{Binding SelectionSummary}" Foreground="{StaticResource TextSubtleBrush}" />
-                    </Grid>
-                    <TextBlock DockPanel.Dock="Top" Margin="0,0,0,8" Text="导入或切换预设后，先勾选要订阅/取消订阅的项目，再执行同步。Steam 结果需要重新扫描确认。" TextWrapping="Wrap" Foreground="{StaticResource TextMutedBrush}" />
-                    <DataGrid x:Name="DiffGrid"
-                              ItemsSource="{Binding DiffRows}"
-                              AutoGenerateColumns="False"
-                              CanUserAddRows="False"
-                              CanUserDeleteRows="False"
-                              IsReadOnly="False"
-                              HeadersVisibility="Column"
-                              GridLinesVisibility="Horizontal"
-                              SelectionMode="Extended"
-                              CurrentCellChanged="DiffGrid_CurrentCellChanged"
-                              ContextMenuOpening="DiffGrid_ContextMenuOpening">
-                        <DataGrid.Columns>
-                            <DataGridCheckBoxColumn Header="选择" Width="52" Binding="{Binding IsSelected, UpdateSourceTrigger=PropertyChanged}" />
-                            <DataGridTextColumn Header="状态" Width="120" Binding="{Binding StatusText}" IsReadOnly="True" />
-                            <DataGridTextColumn Header="动作" Width="100" Binding="{Binding ActionText}" IsReadOnly="True" />
-                            <DataGridTextColumn Header="Mod" Width="*" Binding="{Binding DisplayTitle}" IsReadOnly="True" />
-                            <DataGridTextColumn Header="Workshop ID" Width="125" Binding="{Binding PublishedFileId}" IsReadOnly="True" />
-                        </DataGrid.Columns>
-                    </DataGrid>
-                </DockPanel>
-            </GroupBox>
-        </Grid>
-    </DockPanel>
+                        <ListBox x:Name="PresetsList" ItemsSource="{Binding Presets}" SelectionChanged="PresetsList_SelectionChanged" DisplayMemberPath="Name" />
+                    </DockPanel>
+                </GroupBox>
+
+                <GroupBox Grid.Column="2" Header="Mod 差异与状态" Margin="0">
+                    <DockPanel>
+                        <Grid DockPanel.Dock="Bottom" Margin="0,10,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <WrapPanel>
+                                <Button Content="同步所选" Click="SyncSelected_Click" />
+                                <Button Content="切换忽略" Click="ToggleIgnore_Click" />
+                                <Button Content="暂停" Click="PauseQueue_Click" />
+                                <Button Content="继续" Click="ResumeQueue_Click" />
+                                <Button Content="停止后续" Click="StopQueue_Click" Margin="0" />
+                            </WrapPanel>
+                            <TextBlock Grid.Column="1" VerticalAlignment="Center" Text="{Binding SelectionSummary, Mode=OneWay}" Foreground="{StaticResource TextSubtleBrush}" />
+                        </Grid>
+                        <TextBlock DockPanel.Dock="Top" Margin="0,0,0,8" Text="先勾选需要执行的项目，再同步。Steam 处理后请重新扫描确认。" TextWrapping="Wrap" Foreground="{StaticResource TextMutedBrush}" />
+                        <DataGrid x:Name="DiffGrid" ItemsSource="{Binding DiffRows}" AutoGenerateColumns="False" CanUserAddRows="False" CanUserDeleteRows="False" IsReadOnly="False" HeadersVisibility="Column" GridLinesVisibility="Horizontal" SelectionMode="Extended" CurrentCellChanged="DiffGrid_CurrentCellChanged" ContextMenuOpening="DiffGrid_ContextMenuOpening">
+                            <DataGrid.Columns>
+                                <DataGridCheckBoxColumn Header="选择" Width="52" Binding="{Binding IsSelected, UpdateSourceTrigger=PropertyChanged}" />
+                                <DataGridTextColumn Header="状态" Width="130" Binding="{Binding StatusText, Mode=OneWay}" IsReadOnly="True" />
+                                <DataGridTextColumn Header="动作" Width="100" Binding="{Binding ActionText, Mode=OneWay}" IsReadOnly="True" />
+                                <DataGridTextColumn Header="Mod" Width="*" Binding="{Binding DisplayTitle, Mode=OneWay}" IsReadOnly="True" />
+                                <DataGridTextColumn Header="Workshop ID" Width="125" Binding="{Binding PublishedFileId, Mode=OneWay}" IsReadOnly="True" />
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </DockPanel>
+                </GroupBox>
+            </Grid>
+        </DockPanel>
+    </Border>
 </Window>

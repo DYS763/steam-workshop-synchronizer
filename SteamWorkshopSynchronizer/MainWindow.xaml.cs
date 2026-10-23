@@ -28,7 +28,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
     {
         InitializeComponent();
         services = App.Services;
-        DeveloperModeCheckBox.IsChecked = services.Logger.DeveloperMode;
+        DeveloperModeMenuItem.IsChecked = services.Logger.DeveloperMode;
         DataContext = this;
         Loaded += MainWindow_Loaded;
         services.Logger.Info("界面", "主窗口已创建");
@@ -81,7 +81,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
 
     private void DeveloperMode_Click(object sender, RoutedEventArgs e)
     {
-        var enabled = DeveloperModeCheckBox.IsChecked == true;
+        var enabled = DeveloperModeMenuItem.IsChecked;
         try
         {
             services.Settings.SetBool(AppSettingsStore.DeveloperModeKey, enabled);
@@ -92,7 +92,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         catch (Exception exception)
         {
             services.Logger.Error("设置", "保存开发者模式失败", exception);
-            DeveloperModeCheckBox.IsChecked = services.Logger.DeveloperMode;
+            DeveloperModeMenuItem.IsChecked = services.Logger.DeveloperMode;
             MessageBox.Show($"保存开发者模式失败：{exception.Message}", "设置失败", MessageBoxButton.OK, MessageBoxImage.Warning);
         }
     }

@@ -1,0 +1,22 @@
+# Build output
+**/bin/
+**/obj/
+artifacts/
+publish/
+
+# Visual Studio and local tooling
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Test and coverage output (local-only)
+TestResults/
+coverage/
+
+# Local application data and scratch files
+*.db
+*.db-shm
+*.db-wal
+*.tmp

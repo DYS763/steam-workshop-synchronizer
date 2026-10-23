@@ -264,22 +264,22 @@
                         <TextBlock Text="Steam Mod 清单同步工具" Margin="0,4,0,0" Foreground="{StaticResource TextMutedBrush}" />
                     </StackPanel>
                     <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                        <Button Content="扫描" Width="88" Background="{StaticResource PrimaryLightBrush}" BorderBrush="{StaticResource PrimaryBrush}" Foreground="{StaticResource PrimaryBrush}" Click="RefreshScan_Click" />
-                        <Button Content="导入" Width="88" Background="{StaticResource PrimaryLightBrush}" BorderBrush="{StaticResource PrimaryBrush}" Foreground="{StaticResource PrimaryBrush}" Click="ImportFile_Click" />
-                        <Menu VerticalAlignment="Center">
-                            <MenuItem Header="更多">
-                                <MenuItem Header="粘贴导入" Click="PasteImport_Click" />
+                        <Button Content="扫描" Width="88" Background="{StaticResource PrimaryLightBrush}" BorderBrush="{StaticResource PrimaryBrush}" Foreground="{StaticResource PrimaryBrush}" Click="RefreshScan_Click" ToolTip="重新读取 Steam 游戏、Workshop 和订阅状态" />
+                        <Button Content="导入" Width="88" Background="{StaticResource PrimaryLightBrush}" BorderBrush="{StaticResource PrimaryBrush}" Foreground="{StaticResource PrimaryBrush}" Click="ImportFile_Click" ToolTip="从 JSON 或压缩文本文件导入 Mod 清单" />
+                        <Menu VerticalAlignment="Center" ToolTip="打开导出、备份、日志和其他功能">
+                            <MenuItem Header="更多" ToolTip="打开导出、备份、日志和其他功能">
+                                <MenuItem Header="粘贴导入" Click="PasteImport_Click" ToolTip="从剪贴板导入 JSON 或压缩文本清单" />
                                 <Separator />
-                                <MenuItem Header="导出 JSON" Click="ExportJson_Click" />
-                                <MenuItem Header="复制压缩文本" Click="CopyCompressed_Click" />
+                                <MenuItem Header="导出 JSON" Click="ExportJson_Click" ToolTip="将当前预设或订阅导出为 JSON 文件" />
+                                <MenuItem Header="复制压缩文本" Click="CopyCompressed_Click" ToolTip="复制可通过聊天软件发送的压缩清单文本" />
                                 <Separator />
-                                <MenuItem Header="备份数据" Click="Backup_Click" />
-                                <MenuItem Header="恢复数据" Click="Restore_Click" />
+                                <MenuItem Header="备份数据" Click="Backup_Click" ToolTip="备份预设、版本、回收站、历史和工具设置" />
+                                <MenuItem Header="恢复数据" Click="Restore_Click" ToolTip="选择增量恢复或覆盖恢复工具数据" />
                                 <Separator />
-                                <MenuItem Header="复制失败清单" Click="CopyFailures_Click" />
-                                <MenuItem Header="导出失败清单" Click="ExportFailures_Click" />
-                                <MenuItem Header="查看日志" Click="ViewLogs_Click" />
-                                <MenuItem Header="关于" Click="About_Click" />
+                                <MenuItem Header="复制失败清单" Click="CopyFailures_Click" ToolTip="复制订阅失败项目的名称、地址、ID 和原因" />
+                                <MenuItem Header="导出失败清单" Click="ExportFailures_Click" ToolTip="将订阅失败项目保存为文本文件" />
+                                <MenuItem Header="查看日志" Click="ViewLogs_Click" ToolTip="查看详细运行和错误日志" />
+                                <MenuItem Header="关于" Click="About_Click" ToolTip="查看作者、版本、构建时间和许可证" />
                                 <Separator />
                                 <MenuItem x:Name="DeveloperModeMenuItem" Header="开发者模式" IsCheckable="True" Click="DeveloperMode_Click" ToolTip="开启后记录详细运行日志；错误和警告始终记录。" />
                             </MenuItem>
@@ -305,7 +305,7 @@
                     <DockPanel>
                         <TextBlock DockPanel.Dock="Bottom" Margin="0,8,0,0" Foreground="{StaticResource TextSubtleBrush}" Text="启动时自动扫描，也可点击顶部扫描。" TextWrapping="Wrap" />
                         <TextBox x:Name="GameSearchBox" DockPanel.Dock="Top" Margin="0,0,0,8" ToolTip="按游戏名称或 AppID 模糊搜索" TextChanged="GameSearchBox_TextChanged" />
-                        <CheckBox x:Name="OnlyGamesWithModsCheckBox" DockPanel.Dock="Top" Content="只显示有 Mod 的游戏" Margin="0,0,0,8" Click="OnlyGamesWithMods_Click" />
+                        <CheckBox x:Name="OnlyGamesWithModsCheckBox" DockPanel.Dock="Top" Content="只显示有 Mod 的游戏" Margin="0,0,0,8" Click="OnlyGamesWithMods_Click" ToolTip="隐藏没有扫描到 Workshop Mod 的游戏" />
                         <ListBox x:Name="GamesList" ItemsSource="{Binding Games}" SelectionChanged="GamesList_SelectionChanged" DisplayMemberPath="DisplayName" />
                     </DockPanel>
                 </GroupBox>
@@ -313,13 +313,13 @@
                 <GroupBox Grid.Column="1" Header="预设">
                     <DockPanel>
                         <WrapPanel DockPanel.Dock="Bottom" Margin="0,10,0,0">
-                            <Button Content="新建" Click="CreatePreset_Click" />
-                            <Button Content="编辑" Click="EditPreset_Click" />
-                            <Button Content="版本" Click="PresetVersions_Click" Margin="0" />
-                            <Button Content="导出当前订阅" Click="ExportCurrent_Click" />
-                            <Button Content="回收站" Click="RecycleBin_Click" />
-                            <Button Content="操作历史" Click="History_Click" />
-                            <Button Content="撤回最近批次" Click="UndoLatest_Click" Margin="0" />
+                            <Button Content="新建" Click="CreatePreset_Click" ToolTip="为当前游戏创建一个 Mod 预设" />
+                            <Button Content="编辑" Click="EditPreset_Click" ToolTip="编辑当前预设并保存为新版本" />
+                            <Button Content="版本" Click="PresetVersions_Click" Margin="0" ToolTip="查看、回滚或导出预设历史版本" />
+                            <Button Content="导出当前订阅" Click="ExportCurrent_Click" ToolTip="把当前 Steam 订阅导出为清单" />
+                            <Button Content="回收站" Click="RecycleBin_Click" ToolTip="查看被工具取消订阅的 Mod 并重新订阅" />
+                            <Button Content="操作历史" Click="History_Click" ToolTip="查看操作批次并撤回已提交请求" />
+                            <Button Content="撤回最近批次" Click="UndoLatest_Click" Margin="0" ToolTip="快速撤回最近一次成功提交的批次" />
                         </WrapPanel>
                         <ListBox x:Name="PresetsList" ItemsSource="{Binding Presets}" SelectionChanged="PresetsList_SelectionChanged" DisplayMemberPath="Name" />
                     </DockPanel>
@@ -333,18 +333,30 @@
                                 <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
                             <WrapPanel>
-                                <Button Content="同步所选" Click="SyncSelected_Click" />
-                                <Button Content="切换忽略" Click="ToggleIgnore_Click" />
-                                <Button Content="暂停" Click="PauseQueue_Click" />
-                                <Button Content="继续" Click="ResumeQueue_Click" />
-                                <Button Content="停止后续" Click="StopQueue_Click" Margin="0" />
+                                <Button Content="全选" Click="SelectAll_Click" ToolTip="选择当前列表中所有可执行的订阅或取消订阅项目" />
+                                <Button Content="同步所选" Click="SyncSelected_Click" ToolTip="提交选中的订阅或取消订阅请求" />
+                                <Button Content="切换忽略" Click="ToggleIgnore_Click" ToolTip="切换选中清单项的忽略状态并保存新版本" />
+                                <Button Content="暂停" Click="PauseQueue_Click" ToolTip="暂停后续 Steam 请求" />
+                                <Button Content="继续" Click="ResumeQueue_Click" ToolTip="继续提交暂停的 Steam 请求" />
+                                <Button Content="停止后续" Click="StopQueue_Click" Margin="0" ToolTip="停止未开始的请求，已提交项目不受影响" />
                             </WrapPanel>
                             <TextBlock Grid.Column="1" VerticalAlignment="Center" Text="{Binding SelectionSummary, Mode=OneWay}" Foreground="{StaticResource TextSubtleBrush}" />
                         </Grid>
                         <TextBlock DockPanel.Dock="Top" Margin="0,0,0,8" Text="先勾选需要执行的项目，再同步。Steam 处理后请重新扫描确认。" TextWrapping="Wrap" Foreground="{StaticResource TextMutedBrush}" />
                         <DataGrid x:Name="DiffGrid" ItemsSource="{Binding DiffRows}" AutoGenerateColumns="False" CanUserAddRows="False" CanUserDeleteRows="False" IsReadOnly="False" HeadersVisibility="Column" GridLinesVisibility="Horizontal" SelectionMode="Extended" CurrentCellChanged="DiffGrid_CurrentCellChanged" ContextMenuOpening="DiffGrid_ContextMenuOpening">
                             <DataGrid.Columns>
-                                <DataGridCheckBoxColumn Header="选择" Width="52" Binding="{Binding IsSelected, UpdateSourceTrigger=PropertyChanged}" />
+                                <DataGridTemplateColumn Header="选择" Width="52">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <CheckBox IsChecked="{Binding IsSelected, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                      ClickMode="Press"
+                                                      Focusable="False"
+                                                      HorizontalAlignment="Center"
+                                                      VerticalAlignment="Center"
+                                                      ToolTip="点击选择或取消选择此项目" />
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
                                 <DataGridTextColumn Header="状态" Width="130" Binding="{Binding StatusText, Mode=OneWay}" IsReadOnly="True" />
                                 <DataGridTextColumn Header="动作" Width="100" Binding="{Binding ActionText, Mode=OneWay}" IsReadOnly="True" />
                                 <DataGridTextColumn Header="Mod" Width="*" Binding="{Binding DisplayTitle, Mode=OneWay}" IsReadOnly="True" />

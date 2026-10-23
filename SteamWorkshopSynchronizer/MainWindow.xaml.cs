@@ -335,6 +335,20 @@ public partial class MainWindow : Window, INotifyPropertyChanged
 
     private void DiffGrid_CurrentCellChanged(object? sender, EventArgs e) => UpdateSelectionSummary();
 
+    private void SelectAll_Click(object sender, RoutedEventArgs e)
+    {
+        var actionableRows = DiffRows.Where(row => row.Action is not null).ToArray();
+        foreach (var row in actionableRows)
+        {
+            row.IsSelected = true;
+        }
+
+        UpdateSelectionSummary();
+        StatusText = actionableRows.Length == 0
+            ? "当前没有可执行的同步项目"
+            : $"已全选 {actionableRows.Length} 个可执行项目";
+    }
+
     private void DiffGrid_ContextMenuOpening(object sender, ContextMenuEventArgs e)
     {
         var row = e.OriginalSource is DependencyObject source

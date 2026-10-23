@@ -1,0 +1,83 @@
+name: Build and Release
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+    tags:
+      - 'v*'
+
+permissions:
+  contents: read
+
+env:
+  DOTNET_VERSION: '8.0.x'
+  PROJECT: 'SteamWorkshopSynchronizer/SteamWorkshopSynchronizer.csproj'
+
+jobs:
+  build:
+    name: Build Windows app
+    runs-on: windows-latest
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v5
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Restore
+        run: dotnet restore $env:PROJECT
+
+      - name: Build
+        run: dotnet build $env:PROJECT --configuration Release --no-restore
+
+      - name: Publish self-contained Windows package
+        if: startsWith(github.ref, 'refs/tags/v')
+        shell: pwsh
+        run: |
+          $publishDir = Join-Path $env:GITHUB_WORKSPACE 'publish'
+          dotnet publish $env:PROJECT `
+            --configuration Release `
+            --runtime win-x64 `
+            --self-contained true `
+            --output $publishDir `
+            -p:PublishSingleFile=true `
+            -p:IncludeNativeLibrariesForSelfExtract=true
+          $archivePath = Join-Path $env:GITHUB_WORKSPACE 'SteamWorkshopSynchronizer-win-x64.zip'
+          Compress-Archive -Path (Join-Path $publishDir '*') -DestinationPath $archivePath -Force
+
+      - name: Upload release package
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: actions/upload-artifact@v7
+        with:
+          name: SteamWorkshopSynchronizer-win-x64
+          path: SteamWorkshopSynchronizer-win-x64.zip
+          if-no-files-found: error
+
+  release:
+    name: Create GitHub Release
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Download release package
+        uses: actions/download-artifact@v7
+        with:
+          name: SteamWorkshopSynchronizer-win-x64
+
+      - name: Create release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "${{ github.ref_name }}" \
+            SteamWorkshopSynchronizer-win-x64.zip \
+            --repo "${{ github.repository }}" \
+            --title "Steam Workshop Synchronizer ${{ github.ref_name }}" \
+            --generate-notes

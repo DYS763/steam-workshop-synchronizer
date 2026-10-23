@@ -103,6 +103,12 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         new LogViewerWindow(services.Logger) { Owner = this }.ShowDialog();
     }
 
+    private void About_Click(object sender, RoutedEventArgs e)
+    {
+        services.Logger.Info("界面", "打开关于窗口");
+        new AboutWindow { Owner = this }.ShowDialog();
+    }
+
     private async void RefreshScan_Click(object sender, RoutedEventArgs e) => await RefreshScanAsync();
 
     private async Task RefreshScanAsync()

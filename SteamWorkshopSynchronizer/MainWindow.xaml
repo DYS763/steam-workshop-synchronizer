@@ -42,6 +42,7 @@
                 <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
                     <CheckBox x:Name="DeveloperModeCheckBox" Content="开发者模式" VerticalAlignment="Center" Margin="0,0,12,0" Click="DeveloperMode_Click" ToolTip="开启后记录详细运行日志；错误和警告始终记录。" />
                     <Button Content="查看日志" Click="ViewLogs_Click" />
+                    <Button Content="关于" Click="About_Click" />
                     <TextBlock Text="状态：" FontWeight="SemiBold" />
                     <TextBlock Text="{Binding StatusText}" TextWrapping="Wrap" MaxWidth="430" />
                 </StackPanel>

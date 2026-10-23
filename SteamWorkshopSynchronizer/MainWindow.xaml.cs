@@ -286,6 +286,39 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         }
     }
 
+    private void ToggleIgnore_Click(object sender, RoutedEventArgs e)
+    {
+        if (selectedGame is null || selectedPreset is null)
+        {
+            MessageBox.Show("请先选择游戏和预设。", "忽略同步", MessageBoxButton.OK, MessageBoxImage.Information);
+            return;
+        }
+
+        var selectedIds = DiffGrid.SelectedItems
+            .OfType<DiffRow>()
+            .Where(row => row.IsPresetItem)
+            .Select(row => row.PublishedFileId)
+            .ToHashSet(StringComparer.Ordinal);
+        if (selectedIds.Count == 0)
+        {
+            MessageBox.Show("请在差异列表中选中要切换忽略状态的清单项。", "忽略同步", MessageBoxButton.OK, MessageBoxImage.Information);
+            return;
+        }
+
+        var version = services.Presets.GetCurrentVersion(selectedPreset.Id);
+        if (version is null)
+        {
+            return;
+        }
+
+        var items = version.Items.Select(item => selectedIds.Contains(item.PublishedFileId)
+            ? item with { IsIgnored = !item.IsIgnored }
+            : item).ToArray();
+        services.Presets.CreateVersion(selectedPreset.Id, selectedGame.AppId, items, "edit");
+        LoadPresets(selectedGame.AppId, selectedPreset.Id);
+        StatusText = $"已切换 {selectedIds.Count} 个 Mod 的忽略状态，并保存为新版本。";
+    }
+
     private void PauseQueue_Click(object sender, RoutedEventArgs e)
     {
         services.OperationQueue.Pause();
@@ -806,7 +839,9 @@ public partial class MainWindow : Window, INotifyPropertyChanged
             string? workshopUrl,
             string statusText,
             WorkshopOperationAction? action,
-            bool isSelected)
+            bool isSelected,
+            bool isPresetItem,
+            bool isIgnored)
         {
             PublishedFileId = publishedFileId;
             DisplayTitle = displayTitle;
@@ -814,6 +849,8 @@ public partial class MainWindow : Window, INotifyPropertyChanged
             StatusText = statusText;
             Action = action;
             this.isSelected = isSelected;
+            IsPresetItem = isPresetItem;
+            IsIgnored = isIgnored;
         }
 
         public string PublishedFileId { get; }
@@ -821,6 +858,8 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         public string? WorkshopUrl { get; }
         public string StatusText { get; }
         public WorkshopOperationAction? Action { get; }
+        public bool IsPresetItem { get; }
+        public bool IsIgnored { get; }
         public string ActionText => Action switch
         {
             WorkshopOperationAction.Subscribe => "订阅",
@@ -856,7 +895,9 @@ public partial class MainWindow : Window, INotifyPropertyChanged
                 Core.Comparison.WorkshopDiffKind.Extra => WorkshopOperationAction.Unsubscribe,
                 _ => null
             },
-            entry.DefaultSelected);
+            entry.DefaultSelected,
+            true,
+            entry.IsIgnored);
 
         public static DiffRow FromCurrent(WorkshopItemSnapshot item) => new(
             item.PublishedFileId,
@@ -869,6 +910,8 @@ public partial class MainWindow : Window, INotifyPropertyChanged
                 _ => "状态未知"
             },
             null,
+            false,
+            false,
             false);
 
         private static string GetDiffStatusText(Core.Comparison.WorkshopDiffKind kind, bool ignored) => kind switch

@@ -27,8 +27,10 @@ public partial class MainWindow : Window, INotifyPropertyChanged
     {
         InitializeComponent();
         services = App.Services;
+        DeveloperModeCheckBox.IsChecked = services.Logger.DeveloperMode;
         DataContext = this;
         Loaded += MainWindow_Loaded;
+        services.Logger.Info("界面", "主窗口已创建");
     }
 
     public ObservableCollection<GameInfo> Games { get; } = [];
@@ -72,7 +74,32 @@ public partial class MainWindow : Window, INotifyPropertyChanged
     private async void MainWindow_Loaded(object sender, RoutedEventArgs e)
     {
         Loaded -= MainWindow_Loaded;
+        services.Logger.Info("界面", "主窗口加载完成，开始首次扫描");
         await RefreshScanAsync();
+    }
+
+    private void DeveloperMode_Click(object sender, RoutedEventArgs e)
+    {
+        var enabled = DeveloperModeCheckBox.IsChecked == true;
+        try
+        {
+            services.Settings.SetBool(AppSettingsStore.DeveloperModeKey, enabled);
+            services.Logger.DeveloperMode = enabled;
+            services.Logger.Info("设置", $"开发者模式已{(enabled ? "开启" : "关闭")}");
+            StatusText = enabled ? "开发者模式已开启，详细日志将写入本地日志文件。" : "开发者模式已关闭，仅保留警告和错误日志。";
+        }
+        catch (Exception exception)
+        {
+            services.Logger.Error("设置", "保存开发者模式失败", exception);
+            DeveloperModeCheckBox.IsChecked = services.Logger.DeveloperMode;
+            MessageBox.Show($"保存开发者模式失败：{exception.Message}", "设置失败", MessageBoxButton.OK, MessageBoxImage.Warning);
+        }
+    }
+
+    private void ViewLogs_Click(object sender, RoutedEventArgs e)
+    {
+        services.Logger.Info("界面", "打开日志查看窗口");
+        new LogViewerWindow(services.Logger) { Owner = this }.ShowDialog();
     }
 
     private async void RefreshScan_Click(object sender, RoutedEventArgs e) => await RefreshScanAsync();
@@ -87,6 +114,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         isLoading = true;
         try
         {
+            services.Logger.Info("扫描", "用户触发 Steam 重新扫描");
             var previousAppId = selectedGame?.AppId;
             StatusText = "正在扫描 Steam 库和 Workshop...";
             var snapshot = await services.Discovery.ScanAsync();
@@ -95,14 +123,17 @@ public partial class MainWindow : Window, INotifyPropertyChanged
             StatusText = snapshot.Warnings.Count == 0
                 ? $"扫描完成：发现 {snapshot.Games.Count} 个游戏、{snapshot.WorkshopItems.Count} 个 Workshop 项"
                 : $"扫描完成，但有 {snapshot.Warnings.Count} 条提示：{snapshot.Warnings[0]}";
+            services.Logger.Info("扫描", StatusText);
         }
         catch (OperationCanceledException)
         {
             StatusText = "扫描已取消";
+            services.Logger.Warning("扫描", StatusText);
         }
         catch (Exception exception)
         {
             StatusText = $"扫描失败：{exception.Message}";
+            services.Logger.Error("扫描", "主窗口扫描失败", exception);
             MessageBox.Show(StatusText, "扫描失败", MessageBoxButton.OK, MessageBoxImage.Warning);
         }
         finally
@@ -255,6 +286,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         });
         try
         {
+            services.Logger.Info("同步", $"用户准备同步 {requests.Length} 项，订阅 {subscribeCount} 项，取消订阅 {unsubscribeCount} 项");
             var batchId = services.Operations.CreateBatch(
                 "sync",
                 requests,
@@ -269,6 +301,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
             var submitted = results.Count(result => result.State == WorkshopOperationResultState.Submitted);
             services.Operations.FinishBatch(batchId, failed == results.Count ? "failed" : failed > 0 ? "partial" : "completed");
             StatusText = $"已提交 {submitted} 项，失败 {failed} 项；请等待 Steam 完成后重新扫描。";
+            services.Logger.Info("同步", StatusText);
             if (failed > 0)
             {
                 lastFailureText = BuildFailureText(results.Where(result => result.State == WorkshopOperationResultState.Failed));
@@ -279,10 +312,12 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         catch (OperationCanceledException)
         {
             StatusText = "操作已取消";
+            services.Logger.Warning("同步", StatusText);
         }
         catch (Exception exception)
         {
             StatusText = $"同步失败：{exception.Message}";
+            services.Logger.Error("同步", "主窗口同步失败", exception);
         }
     }
 
@@ -365,6 +400,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
     {
         try
         {
+            services.Logger.Info("导入", $"开始导入清单，来源：{sourceName}，长度：{text.Length}");
             var json = text.TrimStart().StartsWith(CompressedTextCodec.ManifestPrefix, StringComparison.Ordinal)
                 ? services.CompressedText.DecodeManifest(text.Trim())
                 : text;
@@ -403,6 +439,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
             StatusText = parse.Issues.Count == 0
                 ? $"已导入预设“{preset.Name}”，请选择差异后同步"
                 : $"已导入预设“{preset.Name}”，另有 {parse.Issues.Count} 条清单提示";
+            services.Logger.Info("导入", StatusText);
             if (parse.Issues.Count > 0)
             {
                 ShowManifestIssues(parse, sourceName, showOnlyErrors: false);
@@ -410,6 +447,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         }
         catch (Exception exception)
         {
+            services.Logger.Error("导入", $"导入清单失败，来源：{sourceName}", exception);
             MessageBox.Show($"导入失败：{exception.Message}", "导入失败", MessageBoxButton.OK, MessageBoxImage.Warning);
         }
     }
@@ -492,6 +530,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
 
     private void ExportManifest(bool usePreset, bool compressed, bool copyToClipboard)
     {
+        services.Logger.Info("导出", $"开始导出清单，预设={usePreset}，压缩={compressed}，复制={copyToClipboard}");
         var manifest = BuildManifest(usePreset);
         if (manifest is null)
         {
@@ -504,6 +543,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         {
             Clipboard.SetText(output);
             StatusText = $"已复制压缩清单（{output.Length:N0} 个字符）";
+            services.Logger.Info("导出", StatusText);
             return;
         }
 
@@ -517,6 +557,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         {
             File.WriteAllText(dialog.FileName, output, new UTF8Encoding(encoderShouldEmitUTF8Identifier: false));
             StatusText = $"已导出：{dialog.FileName}";
+            services.Logger.Info("导出", StatusText);
         }
     }
 
@@ -524,6 +565,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
     {
         try
         {
+            services.Logger.Info("备份", "用户开始导出工具数据备份");
             var dialog = new SaveFileDialog
             {
                 Filter = "Steam Workshop Synchronizer 备份|*.swsb.txt;*.txt|所有文件|*.*",
@@ -538,6 +580,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
             var backup = services.Backups.ExportCompressed("0.1.0");
             File.WriteAllText(dialog.FileName, backup, new UTF8Encoding(false));
             StatusText = $"已备份工具数据：{dialog.FileName}";
+            services.Logger.Info("备份", StatusText);
             MessageBox.Show(
                 "备份包含：游戏绑定和库路径、全部预设及版本、回收站、操作历史和工具设置。\n\n不包含：Steam 登录信息、Workshop 文件本体和临时执行队列。",
                 "备份完成",
@@ -546,6 +589,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         }
         catch (Exception exception)
         {
+            services.Logger.Error("备份", "导出工具数据备份失败", exception);
             MessageBox.Show($"备份失败：{exception.Message}", "备份失败", MessageBoxButton.OK, MessageBoxImage.Warning);
         }
     }
@@ -574,12 +618,14 @@ public partial class MainWindow : Window, INotifyPropertyChanged
 
         try
         {
+            services.Logger.Info("恢复", $"用户开始恢复工具数据，文件：{dialog.FileName}，模式：{modeChoice}");
             Directory.CreateDirectory(AppDataPaths.RootDirectory);
             var safetyPath = Path.Combine(AppDataPaths.RootDirectory, $"pre-restore-{DateTime.Now:yyyyMMdd-HHmmss}.swsb.txt");
             File.WriteAllText(safetyPath, services.Backups.ExportCompressed("0.1.0"), new UTF8Encoding(false));
             var mode = modeChoice == MessageBoxResult.Yes ? BackupRestoreMode.Incremental : BackupRestoreMode.Overwrite;
             var result = services.Backups.RestoreCompressed(File.ReadAllText(dialog.FileName), mode, safetyPath);
             StatusText = $"恢复完成：导入 {result.ImportedRows} 行，跳过 {result.SkippedRows} 行；请重新扫描 Steam。";
+            services.Logger.Info("恢复", StatusText);
             MessageBox.Show(
                 $"恢复完成。\n\n导入：{result.ImportedRows} 行\n跳过：{result.SkippedRows} 行\n恢复前快照：{result.SafetySnapshotPath}\n\nSteam 当前订阅没有被改变，请重新扫描后自行选择同步。",
                 "恢复完成",
@@ -589,6 +635,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         }
         catch (Exception exception)
         {
+            services.Logger.Error("恢复", "恢复工具数据失败", exception);
             MessageBox.Show($"恢复失败：{exception.Message}", "恢复失败", MessageBoxButton.OK, MessageBoxImage.Warning);
         }
     }
@@ -702,6 +749,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
 
     private async Task RestoreRecycleBinAsync(IReadOnlyList<RecycleBinItem> items, IReadOnlyList<WorkshopOperationRequest> requests)
     {
+        services.Logger.Info("回收站", $"开始恢复回收站项目，共 {requests.Count} 项");
         var batchId = services.Operations.CreateBatch("restore", requests);
         var results = await services.OperationQueue.RunAsync(requests);
         for (var index = 0; index < results.Count; index++)
@@ -719,6 +767,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
 
         services.Operations.FinishBatch(batchId, results.Any(result => result.State == WorkshopOperationResultState.Failed) ? "partial" : "completed");
         StatusText = $"已提交 {results.Count(result => result.State == WorkshopOperationResultState.Submitted)} 个回收站恢复请求，请重新扫描确认。";
+        services.Logger.Info("回收站", StatusText);
     }
 
     private void History_Click(object sender, RoutedEventArgs e)
@@ -808,6 +857,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
     {
         try
         {
+            services.Logger.Info("撤回", $"开始撤回批次 {parentBatchId}，共 {requests.Count} 项");
             var batchId = services.Operations.CreateBatch("undo", requests, parentBatchId: parentBatchId);
             var results = await services.OperationQueue.RunAsync(requests);
             foreach (var result in results)
@@ -818,9 +868,11 @@ public partial class MainWindow : Window, INotifyPropertyChanged
             var failed = results.Count(result => result.State == WorkshopOperationResultState.Failed);
             services.Operations.FinishBatch(batchId, failed == results.Count ? "failed" : failed > 0 ? "partial" : "completed");
             StatusText = $"已提交 {results.Count(result => result.State == WorkshopOperationResultState.Submitted)} 个撤回请求，请重新扫描确认。";
+            services.Logger.Info("撤回", StatusText);
         }
         catch (Exception exception)
         {
+            services.Logger.Error("撤回", "撤回操作失败", exception);
             MessageBox.Show($"撤回失败：{exception.Message}", "撤回失败", MessageBoxButton.OK, MessageBoxImage.Warning);
         }
     }

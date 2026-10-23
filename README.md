@@ -33,6 +33,8 @@ Steam Workshop Synchronizer 是一个面向联机玩家的 Windows 桌面工具�
 - **本地残留**：Steam 明确提供订阅节点，且本地仍有内容目录，但当前订阅列表中没有该 Mod。
 - **状态未知**：Steam 文件缺少足够的订阅信息，工具不会将其强行判断为本地残留。
 
+Steam 新版清单可能不再写入 `WorkshopItemsSubscribed`，工具会读取 `WorkshopItemDetails` 中当前 Steam 账号对应的 `subscribedby` AccountID 来判断订阅状态。
+
 Workshop 名称优先从本地 Mod 元数据读取；读取不到时尝试请求 Steam Workshop 详情。网络不可用或项目已被删除时，界面会保留 `Workshop Mod <ID>` 作为可识别的回退名称。
 
 ## 本地数据与备份

@@ -262,7 +262,7 @@
                 <Border Grid.Row="1" Grid.Column="0" Background="#3D142A3D" CornerRadius="6" Padding="10,7" Margin="0,12,20,0">
                     <TextBlock TextWrapping="Wrap">
                         <Run Text="状态  " FontWeight="SemiBold" Foreground="#8DE8E0" />
-                        <Run Text="{Binding StatusText}" Foreground="{StaticResource TextMutedBrush}" />
+                        <Run Text="{Binding StatusText, Mode=OneWay}" Foreground="{StaticResource TextMutedBrush}" />
                     </TextBlock>
                 </Border>
             </Grid>

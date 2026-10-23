@@ -16,6 +16,7 @@ namespace SteamWorkshopSynchronizer;
 public partial class MainWindow : Window, INotifyPropertyChanged
 {
     private readonly AppServices services;
+    private IReadOnlyList<GameInfo> allGames = [];
     private GameInfo? selectedGame;
     private PresetSummary? selectedPreset;
     private bool isLoading;
@@ -144,18 +145,32 @@ public partial class MainWindow : Window, INotifyPropertyChanged
 
     private void LoadGames(int? preferredAppId)
     {
-        var games = services.Scans.GetGames();
+        allGames = services.Scans.GetGames();
+        ApplyGameFilter(preferredAppId);
+    }
+
+    private void GameSearchBox_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e) => ApplyGameFilter();
+
+    private void ApplyGameFilter(int? preferredAppId = null)
+    {
+        var query = GameSearchBox?.Text.Trim() ?? string.Empty;
+        var games = allGames
+            .Where(game => query.Length == 0
+                || game.Name.Contains(query, StringComparison.CurrentCultureIgnoreCase)
+                || game.AppId.ToString().Contains(query, StringComparison.OrdinalIgnoreCase))
+            .ToArray();
         Games.Clear();
         foreach (var game in games)
         {
             Games.Add(game);
         }
 
-        var next = games.FirstOrDefault(game => game.AppId == preferredAppId) ?? games.FirstOrDefault();
+        var next = games.FirstOrDefault(game => game.AppId == preferredAppId)
+            ?? games.FirstOrDefault(game => game.AppId == selectedGame?.AppId)
+            ?? games.FirstOrDefault();
         GamesList.SelectedItem = next;
-        if (next is null)
+        if (next is null && selectedGame is null)
         {
-            selectedGame = null;
             selectedPreset = null;
             Presets.Clear();
             DiffRows.Clear();

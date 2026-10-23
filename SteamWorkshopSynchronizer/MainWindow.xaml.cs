@@ -759,6 +759,22 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         }
     }
 
+    private void EditPreset_Click(object sender, RoutedEventArgs e)
+    {
+        if (selectedGame is null || selectedPreset is null)
+        {
+            MessageBox.Show("请先选择游戏和预设。", "编辑预设", MessageBoxButton.OK, MessageBoxImage.Information);
+            return;
+        }
+
+        var window = new PresetEditorWindow(selectedGame, selectedPreset) { Owner = this };
+        if (window.ShowDialog() == true)
+        {
+            LoadPresets(selectedGame.AppId, selectedPreset.Id);
+            StatusText = "预设已保存为新版本。";
+        }
+    }
+
     private void UndoLatest_Click(object sender, RoutedEventArgs e)
     {
         var latest = services.Operations.GetHistory(1).FirstOrDefault();

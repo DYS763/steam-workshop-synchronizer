@@ -1,0 +1,34 @@
+<Window x:Class="SteamWorkshopSynchronizer.PresetEditorWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="编辑预设"
+        Width="780"
+        Height="620"
+        MinWidth="620"
+        MinHeight="480"
+        WindowStartupLocation="CenterOwner">
+    <DockPanel Margin="14">
+        <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,10,0,0">
+            <Button Content="保存为新版本" Click="Save_Click" />
+            <Button Content="取消" IsCancel="True" Click="Cancel_Click" />
+        </StackPanel>
+        <TextBlock DockPanel.Dock="Top" Margin="0,0,0,10" Foreground="#555" Text="每行输入一个 Workshop ID 或 Workshop URL。保存会保留旧版本。" TextWrapping="Wrap" />
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="90" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <TextBlock Text="名称" VerticalAlignment="Center" Margin="0,0,8,8" />
+            <TextBox x:Name="NameBox" Grid.Column="1" Margin="0,0,0,8" />
+            <TextBlock Text="备注" Grid.Row="1" VerticalAlignment="Center" Margin="0,0,8,8" />
+            <TextBox x:Name="NoteBox" Grid.Row="1" Grid.Column="1" Margin="0,0,0,8" />
+            <TextBlock Text="Mod 列表" Grid.Row="2" VerticalAlignment="Top" Margin="0,8,8,0" />
+            <TextBox x:Name="ItemsBox" Grid.Row="2" Grid.Column="1" AcceptsReturn="True" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" TextWrapping="NoWrap" />
+        </Grid>
+    </DockPanel>
+</Window>

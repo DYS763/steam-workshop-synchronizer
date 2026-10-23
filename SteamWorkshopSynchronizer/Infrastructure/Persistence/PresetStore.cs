@@ -170,6 +170,20 @@ public sealed class PresetStore
         command.ExecuteNonQuery();
     }
 
+    public void UpdateMetadata(string presetId, string name, string? note)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(presetId);
+        ArgumentException.ThrowIfNullOrWhiteSpace(name);
+        using var connection = database.OpenConnection();
+        using var command = connection.CreateCommand();
+        command.CommandText = "UPDATE presets SET name = $name, note = $note, updated_at = $updatedAt WHERE id = $id;";
+        command.Parameters.AddWithValue("$name", name.Trim());
+        command.Parameters.AddWithValue("$note", (object?)note?.Trim() ?? DBNull.Value);
+        command.Parameters.AddWithValue("$updatedAt", DateTimeOffset.UtcNow.ToString("O"));
+        command.Parameters.AddWithValue("$id", presetId);
+        command.ExecuteNonQuery();
+    }
+
     private static void InsertVersion(
         SqliteTransaction transaction,
         string versionId,

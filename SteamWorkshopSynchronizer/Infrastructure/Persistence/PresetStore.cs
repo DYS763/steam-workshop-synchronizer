@@ -22,16 +22,17 @@ public sealed class PresetStore
 
         using var connection = database.OpenConnection();
         using var transaction = connection.BeginTransaction();
+        var presetName = GetAvailableName(transaction, manifest.Game.AppId, manifest.Preset.Name.Trim());
         Execute(transaction, """
             INSERT INTO presets (id, app_id, name, note, source_type, current_version_id, created_at, updated_at)
             VALUES ($id, $appId, $name, $note, $sourceType, $versionId, $createdAt, $updatedAt);
-            """, ("$id", presetId), ("$appId", manifest.Game.AppId), ("$name", manifest.Preset.Name),
+            """, ("$id", presetId), ("$appId", manifest.Game.AppId), ("$name", presetName),
             ("$note", (object?)manifest.Preset.Note ?? DBNull.Value), ("$sourceType", manifest.Source),
             ("$versionId", versionId), ("$createdAt", timestamp), ("$updatedAt", timestamp));
         InsertVersion(transaction, versionId, presetId, 1, now, "import", null, manifest.Items, manifest.Game.AppId);
         transaction.Commit();
 
-        return new(presetId, manifest.Game.AppId, manifest.Preset.Name, manifest.Preset.Note, manifest.Source, versionId, now, now);
+        return new(presetId, manifest.Game.AppId, presetName, manifest.Preset.Note, manifest.Source, versionId, now, now);
     }
 
     public IReadOnlyList<PresetSummary> GetPresets(int? appId = null)
@@ -303,5 +304,33 @@ public sealed class PresetStore
         }
 
         command.ExecuteNonQuery();
+    }
+
+    private static string GetAvailableName(SqliteTransaction transaction, int appId, string requestedName)
+    {
+        using var command = transaction.Connection!.CreateCommand();
+        command.Transaction = transaction;
+        command.CommandText = "SELECT name FROM presets WHERE app_id = $appId AND archived_at IS NULL;";
+        command.Parameters.AddWithValue("$appId", appId);
+        using var reader = command.ExecuteReader();
+        var names = new HashSet<string>(StringComparer.CurrentCultureIgnoreCase);
+        while (reader.Read())
+        {
+            names.Add(reader.GetString(0));
+        }
+
+        if (names.Add(requestedName))
+        {
+            return requestedName;
+        }
+
+        var copyName = $"{requestedName} 副本";
+        var copyNumber = 2;
+        while (!names.Add(copyName))
+        {
+            copyName = $"{requestedName} 副本 {copyNumber++}";
+        }
+
+        return copyName;
     }
 }

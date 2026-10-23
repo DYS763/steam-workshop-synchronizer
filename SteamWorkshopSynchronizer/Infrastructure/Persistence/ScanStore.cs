@@ -74,6 +74,24 @@ public sealed class ScanStore
         transaction.Commit();
     }
 
+    public void EnsureGame(GameInfo game)
+    {
+        ArgumentNullException.ThrowIfNull(game);
+        using var connection = database.OpenConnection();
+        using var command = connection.CreateCommand();
+        command.CommandText = """
+            INSERT INTO games (app_id, name, install_path, is_installed, last_scanned_at)
+            VALUES ($appId, $name, $installPath, $isInstalled, $lastScannedAt)
+            ON CONFLICT (app_id) DO UPDATE SET name = CASE WHEN games.name LIKE 'App %' THEN excluded.name ELSE games.name END;
+            """;
+        command.Parameters.AddWithValue("$appId", game.AppId);
+        command.Parameters.AddWithValue("$name", game.Name);
+        command.Parameters.AddWithValue("$installPath", (object?)game.InstallPath ?? DBNull.Value);
+        command.Parameters.AddWithValue("$isInstalled", game.IsInstalled ? 1 : 0);
+        command.Parameters.AddWithValue("$lastScannedAt", DateTimeOffset.UtcNow.ToString("O"));
+        command.ExecuteNonQuery();
+    }
+
     public IReadOnlyList<GameInfo> GetGames(bool installedOnly = false)
     {
         using var connection = database.OpenConnection();

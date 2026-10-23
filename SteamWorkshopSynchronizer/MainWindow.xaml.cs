@@ -1,23 +1,601 @@
-﻿using System.Text;
+using Microsoft.Win32;
+using SteamWorkshopSynchronizer.Application;
+using SteamWorkshopSynchronizer.Core.Models;
+using SteamWorkshopSynchronizer.Core.Operations;
+using SteamWorkshopSynchronizer.Core.Serialization;
+using SteamWorkshopSynchronizer.Infrastructure.Persistence;
+using System.Collections.ObjectModel;
+using System.ComponentModel;
+using System.IO;
+using System.Text;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 
 namespace SteamWorkshopSynchronizer;
 
-/// <summary>
-/// Interaction logic for MainWindow.xaml
-/// </summary>
-public partial class MainWindow : Window
+public partial class MainWindow : Window, INotifyPropertyChanged
 {
+    private readonly AppServices services;
+    private GameInfo? selectedGame;
+    private PresetSummary? selectedPreset;
+    private bool isLoading;
+    private string statusText = "正在准备扫描...";
+    private string selectionSummary = "未选择操作";
+
     public MainWindow()
     {
         InitializeComponent();
+        services = App.Services;
+        DataContext = this;
+        Loaded += MainWindow_Loaded;
+    }
+
+    public ObservableCollection<GameInfo> Games { get; } = [];
+
+    public ObservableCollection<PresetSummary> Presets { get; } = [];
+
+    public ObservableCollection<DiffRow> DiffRows { get; } = [];
+
+    public string StatusText
+    {
+        get => statusText;
+        private set
+        {
+            if (statusText == value)
+            {
+                return;
+            }
+
+            statusText = value;
+            OnPropertyChanged(nameof(StatusText));
+        }
+    }
+
+    public string SelectionSummary
+    {
+        get => selectionSummary;
+        private set
+        {
+            if (selectionSummary == value)
+            {
+                return;
+            }
+
+            selectionSummary = value;
+            OnPropertyChanged(nameof(SelectionSummary));
+        }
+    }
+
+    public event PropertyChangedEventHandler? PropertyChanged;
+
+    private async void MainWindow_Loaded(object sender, RoutedEventArgs e)
+    {
+        Loaded -= MainWindow_Loaded;
+        await RefreshScanAsync();
+    }
+
+    private async void RefreshScan_Click(object sender, RoutedEventArgs e) => await RefreshScanAsync();
+
+    private async Task RefreshScanAsync()
+    {
+        if (isLoading)
+        {
+            return;
+        }
+
+        isLoading = true;
+        try
+        {
+            var previousAppId = selectedGame?.AppId;
+            StatusText = "正在扫描 Steam 库和 Workshop...";
+            var snapshot = await services.Discovery.ScanAsync();
+            services.Scans.SaveSnapshot(snapshot);
+            LoadGames(previousAppId);
+            StatusText = snapshot.Warnings.Count == 0
+                ? $"扫描完成：发现 {snapshot.Games.Count} 个游戏、{snapshot.WorkshopItems.Count} 个 Workshop 项"
+                : $"扫描完成，但有 {snapshot.Warnings.Count} 条提示：{snapshot.Warnings[0]}";
+        }
+        catch (OperationCanceledException)
+        {
+            StatusText = "扫描已取消";
+        }
+        catch (Exception exception)
+        {
+            StatusText = $"扫描失败：{exception.Message}";
+            MessageBox.Show(StatusText, "扫描失败", MessageBoxButton.OK, MessageBoxImage.Warning);
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private void LoadGames(int? preferredAppId)
+    {
+        var games = services.Scans.GetGames();
+        Games.Clear();
+        foreach (var game in games)
+        {
+            Games.Add(game);
+        }
+
+        var next = games.FirstOrDefault(game => game.AppId == preferredAppId) ?? games.FirstOrDefault();
+        GamesList.SelectedItem = next;
+        if (next is null)
+        {
+            selectedGame = null;
+            selectedPreset = null;
+            Presets.Clear();
+            DiffRows.Clear();
+            SelectionSummary = "未发现已安装游戏";
+        }
+    }
+
+    private void GamesList_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (GamesList.SelectedItem is not GameInfo game)
+        {
+            return;
+        }
+
+        selectedGame = game;
+        LoadPresets(game.AppId);
+    }
+
+    private void LoadPresets(int appId, string? preferredPresetId = null)
+    {
+        var presets = services.Presets.GetPresets(appId);
+        Presets.Clear();
+        foreach (var preset in presets)
+        {
+            Presets.Add(preset);
+        }
+
+        var next = presets.FirstOrDefault(preset => preset.Id == preferredPresetId) ?? presets.FirstOrDefault();
+        PresetsList.SelectedItem = next;
+        selectedPreset = next;
+        RefreshDiffRows();
+    }
+
+    private void PresetsList_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (isLoading || PresetsList.SelectedItem is not PresetSummary preset)
+        {
+            return;
+        }
+
+        selectedPreset = preset;
+        RefreshDiffRows();
+    }
+
+    private void RefreshDiffRows()
+    {
+        DiffRows.Clear();
+        if (selectedGame is null)
+        {
+            SelectionSummary = "未选择游戏";
+            return;
+        }
+
+        var currentItems = services.Scans.GetWorkshopItems(selectedGame.AppId);
+        if (selectedPreset is null)
+        {
+            foreach (var item in currentItems.Where(item => item.IsSubscribed || item.IsLocalResidual))
+            {
+                DiffRows.Add(DiffRow.FromCurrent(item));
+            }
+
+            UpdateSelectionSummary();
+            return;
+        }
+
+        var version = services.Presets.GetCurrentVersion(selectedPreset.Id);
+        if (version is null)
+        {
+            StatusText = "当前预设没有可用版本";
+            return;
+        }
+
+        var target = new ManifestDocument(
+            ManifestSerializer.Format,
+            ManifestSerializer.CurrentFormatVersion,
+            new(selectedGame.AppId, selectedGame.Name),
+            new(selectedPreset.Name, selectedPreset.Note),
+            version.Items.Select(item => new ManifestItem(item.PublishedFileId, item.Title, item.WorkshopUrl, item.IsIgnored, item.Source)).ToArray(),
+            version.CreatedAt,
+            "preset");
+        foreach (var entry in services.Diffs.Calculate(selectedGame.AppId, currentItems, target))
+        {
+            DiffRows.Add(DiffRow.FromDiff(entry));
+        }
+
+        UpdateSelectionSummary();
+    }
+
+    private void UpdateSelectionSummary()
+    {
+        var selected = DiffRows.Count(row => row.IsSelected && row.Action is not null);
+        var actionable = DiffRows.Count(row => row.Action is not null);
+        SelectionSummary = actionable == 0 ? "没有待执行动作" : $"已选择 {selected}/{actionable} 项";
+    }
+
+    private async void SyncSelected_Click(object sender, RoutedEventArgs e)
+    {
+        DiffGrid.CommitEdit(DataGridEditingUnit.Cell, true);
+        DiffGrid.CommitEdit(DataGridEditingUnit.Row, true);
+        var requests = DiffRows
+            .Where(row => row.IsSelected && row.Action is not null && selectedGame is not null)
+            .Select(row => new WorkshopOperationRequest(selectedGame!.AppId, row.PublishedFileId, row.Action!.Value, row.DisplayTitle, row.WorkshopUrl))
+            .ToArray();
+        if (requests.Length == 0)
+        {
+            MessageBox.Show("请先选择要订阅或取消订阅的 Mod。", "没有选中项目", MessageBoxButton.OK, MessageBoxImage.Information);
+            return;
+        }
+
+        var subscribeCount = requests.Count(request => request.Action == WorkshopOperationAction.Subscribe);
+        var unsubscribeCount = requests.Length - subscribeCount;
+        var confirmation = MessageBox.Show(
+            $"将提交 {subscribeCount} 个订阅、{unsubscribeCount} 个取消订阅请求。是否继续？\n\nSteam 处理结果需要重新扫描确认。",
+            "确认同步",
+            MessageBoxButton.YesNo,
+            MessageBoxImage.Question);
+        if (confirmation != MessageBoxResult.Yes)
+        {
+            return;
+        }
+
+        StatusText = $"正在提交 {requests.Length} 个 Steam 请求...";
+        var progress = new Progress<WorkshopOperationProgress>(value =>
+        {
+            StatusText = $"已处理 {value.Completed}/{value.Total}：{value.Result.Request.PublishedFileId} {GetOperationStateText(value.Result.State)}";
+        });
+        try
+        {
+            var results = await services.OperationQueue.RunAsync(requests, progress);
+            var failed = results.Count(result => result.State == WorkshopOperationResultState.Failed);
+            var submitted = results.Count(result => result.State == WorkshopOperationResultState.Submitted);
+            StatusText = $"已提交 {submitted} 项，失败 {failed} 项；请等待 Steam 完成后重新扫描。";
+            if (failed > 0)
+            {
+                var details = string.Join(Environment.NewLine, results.Where(result => result.State == WorkshopOperationResultState.Failed).Select(result => $"{result.Request.PublishedFileId}: {result.ErrorMessage}"));
+                MessageBox.Show(details, "部分 Steam 请求失败", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            StatusText = "操作已取消";
+        }
+        catch (Exception exception)
+        {
+            StatusText = $"同步失败：{exception.Message}";
+        }
+    }
+
+    private void PauseQueue_Click(object sender, RoutedEventArgs e)
+    {
+        services.OperationQueue.Pause();
+        StatusText = "队列已暂停";
+    }
+
+    private void ResumeQueue_Click(object sender, RoutedEventArgs e)
+    {
+        services.OperationQueue.Resume();
+        StatusText = "队列继续提交";
+    }
+
+    private void StopQueue_Click(object sender, RoutedEventArgs e)
+    {
+        services.OperationQueue.Stop();
+        StatusText = "已停止提交后续请求，已完成项保持不变";
+    }
+
+    private void ImportFile_Click(object sender, RoutedEventArgs e)
+    {
+        var dialog = new OpenFileDialog
+        {
+            Filter = "Workshop 清单|*.json;*.txt|所有文件|*.*",
+            Title = "导入 Workshop 清单"
+        };
+        if (dialog.ShowDialog(this) == true)
+        {
+            ImportText(File.ReadAllText(dialog.FileName), Path.GetFileName(dialog.FileName));
+        }
+    }
+
+    private void PasteImport_Click(object sender, RoutedEventArgs e)
+    {
+        if (!Clipboard.ContainsText())
+        {
+            MessageBox.Show("剪贴板中没有文本。", "无法导入", MessageBoxButton.OK, MessageBoxImage.Information);
+            return;
+        }
+
+        ImportText(Clipboard.GetText(), "剪贴板");
+    }
+
+    private void ImportText(string text, string sourceName)
+    {
+        try
+        {
+            var json = text.TrimStart().StartsWith(CompressedTextCodec.ManifestPrefix, StringComparison.Ordinal)
+                ? services.CompressedText.DecodeManifest(text.Trim())
+                : text;
+            var parse = ParseManifestOrIdList(json);
+            if (parse.Document is null)
+            {
+                ShowManifestIssues(parse, sourceName);
+                return;
+            }
+
+            if (parse.IsFutureVersion)
+            {
+                var result = MessageBox.Show(
+                    "该清单版本高于当前工具，强制导入可能丢失未知字段。是否继续？",
+                    "版本兼容提示",
+                    MessageBoxButton.YesNo,
+                    MessageBoxImage.Warning);
+                if (result != MessageBoxResult.Yes)
+                {
+                    return;
+                }
+
+                parse = services.Manifests.Parse(json, forceFutureVersion: true);
+                if (parse.Document is null)
+                {
+                    ShowManifestIssues(parse, sourceName);
+                    return;
+                }
+            }
+
+            services.Scans.EnsureGame(new GameInfo(parse.Document.Game.AppId, parse.Document.Game.Name, null, false));
+            var preset = services.Presets.CreateFromManifest(parse.Document);
+            EnsureGameExists(parse.Document.Game);
+            LoadGames(parse.Document.Game.AppId);
+            LoadPresets(parse.Document.Game.AppId, preset.Id);
+            StatusText = parse.Issues.Count == 0
+                ? $"已导入预设“{preset.Name}”，请选择差异后同步"
+                : $"已导入预设“{preset.Name}”，另有 {parse.Issues.Count} 条清单提示";
+            if (parse.Issues.Count > 0)
+            {
+                ShowManifestIssues(parse, sourceName, showOnlyErrors: false);
+            }
+        }
+        catch (Exception exception)
+        {
+            MessageBox.Show($"导入失败：{exception.Message}", "导入失败", MessageBoxButton.OK, MessageBoxImage.Warning);
+        }
+    }
+
+    private ManifestParseResult ParseManifestOrIdList(string text)
+    {
+        if (text.TrimStart().StartsWith("{", StringComparison.Ordinal))
+        {
+            return services.Manifests.Parse(text);
+        }
+
+        if (selectedGame is null)
+        {
+            return new(null, [new(ManifestIssueSeverity.Error, "每行 ID 的简易文本没有游戏信息，请先选择目标游戏")], false);
+        }
+
+        var items = text
+            .Split(["\r\n", "\n"], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Select(line => line.Trim())
+            .Where(line => line.Length > 0)
+            .Select(line => new ManifestItem(line, null, $"https://steamcommunity.com/sharedfiles/filedetails/?id={line}", false, "text"))
+            .ToArray();
+        var manifest = services.Manifests.Create(selectedGame, "剪贴板导入", null, items, "import");
+        return new(manifest, [], false);
+    }
+
+    private void EnsureGameExists(ManifestGame game)
+    {
+        if (Games.Any(existing => existing.AppId == game.AppId))
+        {
+            return;
+        }
+
+        Games.Add(new GameInfo(game.AppId, game.Name, null, false));
+    }
+
+    private void ShowManifestIssues(ManifestParseResult parse, string sourceName, bool showOnlyErrors = true)
+    {
+        var issues = parse.Issues.Where(issue => !showOnlyErrors || issue.Severity == ManifestIssueSeverity.Error).ToArray();
+        if (issues.Length == 0)
+        {
+            return;
+        }
+
+        var message = string.Join(Environment.NewLine, issues.Take(12).Select(issue =>
+            issue.ItemIndex is null ? issue.Message : $"第 {issue.ItemIndex.Value + 1} 项：{issue.Message}"));
+        if (issues.Length > 12)
+        {
+            message += Environment.NewLine + $"还有 {issues.Length - 12} 条提示。";
+        }
+
+        MessageBox.Show($"来源：{sourceName}\n\n{message}", "清单校验提示", MessageBoxButton.OK, MessageBoxImage.Warning);
+    }
+
+    private void ExportJson_Click(object sender, RoutedEventArgs e) => ExportManifest(usePreset: selectedPreset is not null, compressed: false, copyToClipboard: false);
+
+    private void ExportCurrent_Click(object sender, RoutedEventArgs e) => ExportManifest(usePreset: false, compressed: false, copyToClipboard: false);
+
+    private void CopyCompressed_Click(object sender, RoutedEventArgs e) => ExportManifest(usePreset: selectedPreset is not null, compressed: true, copyToClipboard: true);
+
+    private void ExportManifest(bool usePreset, bool compressed, bool copyToClipboard)
+    {
+        var manifest = BuildManifest(usePreset);
+        if (manifest is null)
+        {
+            return;
+        }
+
+        var json = services.Manifests.Serialize(manifest);
+        var output = compressed ? services.CompressedText.EncodeManifest(json) : json;
+        if (copyToClipboard)
+        {
+            Clipboard.SetText(output);
+            StatusText = $"已复制压缩清单（{output.Length:N0} 个字符）";
+            return;
+        }
+
+        var dialog = new SaveFileDialog
+        {
+            Filter = compressed ? "压缩 Workshop 清单|*.sws.txt;*.txt|所有文件|*.*" : "Workshop JSON 清单|*.json|所有文件|*.*",
+            FileName = SanitizeFileName($"{manifest.Preset.Name}{(compressed ? ".sws.txt" : ".json")}"),
+            Title = compressed ? "导出压缩 Workshop 清单" : "导出 Workshop JSON 清单"
+        };
+        if (dialog.ShowDialog(this) == true)
+        {
+            File.WriteAllText(dialog.FileName, output, new UTF8Encoding(encoderShouldEmitUTF8Identifier: false));
+            StatusText = $"已导出：{dialog.FileName}";
+        }
+    }
+
+    private ManifestDocument? BuildManifest(bool usePreset)
+    {
+        if (selectedGame is null)
+        {
+            MessageBox.Show("请先选择游戏。", "无法导出", MessageBoxButton.OK, MessageBoxImage.Information);
+            return null;
+        }
+
+        if (usePreset && selectedPreset is not null)
+        {
+            var version = services.Presets.GetCurrentVersion(selectedPreset.Id);
+            if (version is null)
+            {
+                MessageBox.Show("当前预设没有可导出的版本。", "无法导出", MessageBoxButton.OK, MessageBoxImage.Information);
+                return null;
+            }
+
+            return new(
+                ManifestSerializer.Format,
+                ManifestSerializer.CurrentFormatVersion,
+                new(selectedGame.AppId, selectedGame.Name),
+                new(selectedPreset.Name, selectedPreset.Note),
+                version.Items.Select(item => new ManifestItem(item.PublishedFileId, item.Title, item.WorkshopUrl, item.IsIgnored, item.Source)).ToArray(),
+                DateTimeOffset.UtcNow,
+                "preset");
+        }
+
+        var items = services.Scans.GetWorkshopItems(selectedGame.AppId)
+            .Where(item => item.IsSubscribed)
+            .Select(item => new ManifestItem(item.PublishedFileId, item.Title, item.WorkshopUrl, false, "current-subscriptions"))
+            .ToArray();
+        return services.Manifests.Create(selectedGame, "当前订阅", null, items, "current-subscriptions");
+    }
+
+    private void RecycleBin_Click(object sender, RoutedEventArgs e)
+    {
+        MessageBox.Show("回收站数据层将在同步历史模块完成后开放。当前取消订阅请求仍会通过队列提交。", "回收站", MessageBoxButton.OK, MessageBoxImage.Information);
+    }
+
+    private static string SanitizeFileName(string fileName)
+    {
+        foreach (var invalid in Path.GetInvalidFileNameChars())
+        {
+            fileName = fileName.Replace(invalid, '_');
+        }
+
+        return fileName;
+    }
+
+    private static string GetOperationStateText(WorkshopOperationResultState state) => state switch
+    {
+        WorkshopOperationResultState.Submitted => "已提交",
+        WorkshopOperationResultState.Failed => "失败",
+        WorkshopOperationResultState.Stopped => "已停止",
+        _ => "已跳过"
+    };
+
+    private void OnPropertyChanged(string propertyName) => PropertyChanged?.Invoke(this, new(propertyName));
+
+    public sealed class DiffRow : INotifyPropertyChanged
+    {
+        private bool isSelected;
+
+        private DiffRow(
+            string publishedFileId,
+            string displayTitle,
+            string? workshopUrl,
+            string statusText,
+            WorkshopOperationAction? action,
+            bool isSelected)
+        {
+            PublishedFileId = publishedFileId;
+            DisplayTitle = displayTitle;
+            WorkshopUrl = workshopUrl;
+            StatusText = statusText;
+            Action = action;
+            this.isSelected = isSelected;
+        }
+
+        public string PublishedFileId { get; }
+        public string DisplayTitle { get; }
+        public string? WorkshopUrl { get; }
+        public string StatusText { get; }
+        public WorkshopOperationAction? Action { get; }
+        public string ActionText => Action switch
+        {
+            WorkshopOperationAction.Subscribe => "订阅",
+            WorkshopOperationAction.Unsubscribe => "取消订阅",
+            _ => ""
+        };
+
+        public bool IsSelected
+        {
+            get => isSelected;
+            set
+            {
+                if (isSelected == value)
+                {
+                    return;
+                }
+
+                isSelected = value;
+                PropertyChanged?.Invoke(this, new(nameof(IsSelected)));
+            }
+        }
+
+        public event PropertyChangedEventHandler? PropertyChanged;
+
+        public static DiffRow FromDiff(Core.Comparison.WorkshopDiffEntry entry) => new(
+            entry.PublishedFileId,
+            string.IsNullOrWhiteSpace(entry.Title) ? $"Workshop Mod {entry.PublishedFileId}" : entry.Title,
+            entry.WorkshopUrl,
+            GetDiffStatusText(entry.Kind, entry.IsIgnored),
+            entry.Kind switch
+            {
+                Core.Comparison.WorkshopDiffKind.Missing when !entry.IsIgnored => WorkshopOperationAction.Subscribe,
+                Core.Comparison.WorkshopDiffKind.Extra => WorkshopOperationAction.Unsubscribe,
+                _ => null
+            },
+            entry.DefaultSelected);
+
+        public static DiffRow FromCurrent(WorkshopItemSnapshot item) => new(
+            item.PublishedFileId,
+            string.IsNullOrWhiteSpace(item.Title) ? $"Workshop Mod {item.PublishedFileId}" : item.Title,
+            item.WorkshopUrl,
+            item.IsLocalResidual ? "本地残留" : item.DownloadState switch
+            {
+                WorkshopDownloadState.Downloaded => "已订阅",
+                WorkshopDownloadState.Pending => "订阅中",
+                _ => "状态未知"
+            },
+            null,
+            false);
+
+        private static string GetDiffStatusText(Core.Comparison.WorkshopDiffKind kind, bool ignored) => kind switch
+        {
+            Core.Comparison.WorkshopDiffKind.Missing when ignored => "清单缺少（已忽略）",
+            Core.Comparison.WorkshopDiffKind.Missing => "清单缺少",
+            Core.Comparison.WorkshopDiffKind.Extra => "本地多出",
+            Core.Comparison.WorkshopDiffKind.UpToDate => "一致",
+            Core.Comparison.WorkshopDiffKind.PendingDownload => "下载中",
+            Core.Comparison.WorkshopDiffKind.LocalResidual => "本地残留",
+            _ => "状态未知"
+        };
     }
 }

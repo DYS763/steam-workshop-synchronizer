@@ -1,12 +1,106 @@
-﻿<Window x:Class="SteamWorkshopSynchronizer.MainWindow"
+<Window x:Class="SteamWorkshopSynchronizer.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:SteamWorkshopSynchronizer"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
-    <Grid>
+        Title="Steam Workshop Synchronizer"
+        MinWidth="1100"
+        MinHeight="680"
+        Width="1280"
+        Height="780"
+        WindowStartupLocation="CenterScreen">
+    <Window.Resources>
+        <Style TargetType="Button">
+            <Setter Property="Margin" Value="0,0,8,0" />
+            <Setter Property="Padding" Value="12,6" />
+            <Setter Property="MinHeight" Value="32" />
+        </Style>
+        <Style TargetType="GroupBox">
+            <Setter Property="Margin" Value="0,0,8,0" />
+            <Setter Property="Padding" Value="8" />
+        </Style>
+    </Window.Resources>
+    <DockPanel Margin="12">
+        <Border DockPanel.Dock="Top" Padding="0,0,0,10" BorderBrush="#D6D9DE" BorderThickness="0,0,0,1">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <StackPanel Orientation="Horizontal">
+                    <Button Content="重新扫描" Click="RefreshScan_Click" />
+                    <Button Content="导入文件" Click="ImportFile_Click" />
+                    <Button Content="粘贴导入" Click="PasteImport_Click" />
+                    <Button Content="导出 JSON" Click="ExportJson_Click" />
+                    <Button Content="复制压缩文本" Click="CopyCompressed_Click" />
+                </StackPanel>
+                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBlock Text="状态：" FontWeight="SemiBold" />
+                    <TextBlock Text="{Binding StatusText}" TextWrapping="Wrap" MaxWidth="430" />
+                </StackPanel>
+            </Grid>
+        </Border>
 
-    </Grid>
+        <Grid Margin="0,10,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="230" />
+                <ColumnDefinition Width="270" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <GroupBox Header="Steam 游戏">
+                <DockPanel>
+                    <TextBlock DockPanel.Dock="Bottom" Margin="0,8,0,0" Foreground="#666" Text="启动时自动扫描，也可手动刷新。" TextWrapping="Wrap" />
+                    <ListBox x:Name="GamesList" ItemsSource="{Binding Games}" SelectionChanged="GamesList_SelectionChanged" DisplayMemberPath="Name" />
+                </DockPanel>
+            </GroupBox>
+
+            <GroupBox Grid.Column="1" Header="预设">
+                <DockPanel>
+                    <StackPanel DockPanel.Dock="Bottom" Margin="0,8,0,0">
+                        <Button Content="导出当前订阅" Click="ExportCurrent_Click" />
+                        <Button Content="打开回收站" Click="RecycleBin_Click" />
+                    </StackPanel>
+                    <ListBox x:Name="PresetsList" ItemsSource="{Binding Presets}" SelectionChanged="PresetsList_SelectionChanged" DisplayMemberPath="Name" />
+                </DockPanel>
+            </GroupBox>
+
+            <GroupBox Grid.Column="2" Header="Mod 差异与状态" Margin="0">
+                <DockPanel>
+                    <Grid DockPanel.Dock="Bottom" Margin="0,10,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Orientation="Horizontal">
+                            <Button Content="同步所选" Click="SyncSelected_Click" />
+                            <Button Content="暂停" Click="PauseQueue_Click" />
+                            <Button Content="继续" Click="ResumeQueue_Click" />
+                            <Button Content="停止后续" Click="StopQueue_Click" />
+                        </StackPanel>
+                        <TextBlock Grid.Column="1" VerticalAlignment="Center" Text="{Binding SelectionSummary}" Foreground="#666" />
+                    </Grid>
+                    <TextBlock DockPanel.Dock="Top" Margin="0,0,0,8" Text="导入或切换预设后，先勾选要订阅/取消订阅的项目，再执行同步。Steam 结果需要重新扫描确认。" TextWrapping="Wrap" Foreground="#555" />
+                    <DataGrid x:Name="DiffGrid"
+                              ItemsSource="{Binding DiffRows}"
+                              AutoGenerateColumns="False"
+                              CanUserAddRows="False"
+                              CanUserDeleteRows="False"
+                              IsReadOnly="False"
+                              HeadersVisibility="Column"
+                              GridLinesVisibility="Horizontal"
+                              SelectionMode="Extended">
+                        <DataGrid.Columns>
+                            <DataGridCheckBoxColumn Header="选择" Width="52" Binding="{Binding IsSelected, UpdateSourceTrigger=PropertyChanged}" />
+                            <DataGridTextColumn Header="状态" Width="120" Binding="{Binding StatusText}" IsReadOnly="True" />
+                            <DataGridTextColumn Header="动作" Width="100" Binding="{Binding ActionText}" IsReadOnly="True" />
+                            <DataGridTextColumn Header="Mod" Width="*" Binding="{Binding DisplayTitle}" IsReadOnly="True" />
+                            <DataGridTextColumn Header="Workshop ID" Width="125" Binding="{Binding PublishedFileId}" IsReadOnly="True" />
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </DockPanel>
+            </GroupBox>
+        </Grid>
+    </DockPanel>
 </Window>

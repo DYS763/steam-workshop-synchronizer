@@ -691,10 +691,39 @@ public partial class MainWindow : Window, INotifyPropertyChanged
     private void History_Click(object sender, RoutedEventArgs e)
     {
         var history = services.Operations.GetHistory(30);
-        var message = history.Count == 0
-            ? "暂无操作历史。"
-            : string.Join(Environment.NewLine, history.Select(item => $"{item.CreatedAt.LocalDateTime:g}  {item.Kind}  {item.Status}  {item.CompletedItems}/{item.TotalItems}"));
-        MessageBox.Show(message, "操作历史", MessageBoxButton.OK, MessageBoxImage.Information);
+        if (history.Count == 0)
+        {
+            MessageBox.Show("暂无操作历史。", "操作历史", MessageBoxButton.OK, MessageBoxImage.Information);
+            return;
+        }
+
+        var window = new OperationHistoryWindow(history) { Owner = this };
+        if (window.ShowDialog() == true && window.SelectedBatch is not null)
+        {
+            var requests = services.Operations.GetUndoRequests(window.SelectedBatch.Id);
+            if (requests.Count == 0)
+            {
+                MessageBox.Show("该批次没有已成功提交的项目，无法撤回。", "撤回", MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+
+            _ = UndoBatchAsync(window.SelectedBatch.Id, requests);
+        }
+    }
+
+    private void PresetVersions_Click(object sender, RoutedEventArgs e)
+    {
+        if (selectedGame is null || selectedPreset is null)
+        {
+            MessageBox.Show("请先选择游戏和预设。", "预设版本", MessageBoxButton.OK, MessageBoxImage.Information);
+            return;
+        }
+
+        var window = new PresetVersionsWindow(selectedGame, selectedPreset) { Owner = this };
+        if (window.ShowDialog() == true)
+        {
+            LoadPresets(selectedGame.AppId, selectedPreset.Id);
+        }
     }
 
     private void UndoLatest_Click(object sender, RoutedEventArgs e)

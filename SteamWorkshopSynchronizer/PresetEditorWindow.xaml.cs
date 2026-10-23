@@ -1,4 +1,5 @@
 using SteamWorkshopSynchronizer.Core.Models;
+using SteamWorkshopSynchronizer.Core.Serialization;
 using System.Text;
 using System.Windows;
 
@@ -7,21 +8,28 @@ namespace SteamWorkshopSynchronizer;
 public partial class PresetEditorWindow : Window
 {
     private readonly GameInfo game;
-    private readonly PresetSummary preset;
-    private readonly PresetVersionSnapshot version;
+    private readonly PresetSummary? preset;
+    private readonly PresetVersionSnapshot? version;
     private readonly Application.AppServices services;
 
-    public PresetEditorWindow(GameInfo game, PresetSummary preset)
+    public PresetEditorWindow(GameInfo game, PresetSummary? preset = null)
     {
         InitializeComponent();
         this.game = game;
         this.preset = preset;
         services = App.Services;
-        version = services.Presets.GetCurrentVersion(preset.Id) ?? throw new InvalidOperationException("当前预设没有版本");
-        NameBox.Text = preset.Name;
-        NoteBox.Text = preset.Note ?? string.Empty;
-        ItemsBox.Text = string.Join(Environment.NewLine, version.Items.Select(item => item.PublishedFileId));
+        Title = preset is null ? "新建预设" : "编辑预设";
+        version = preset is null ? null : services.Presets.GetCurrentVersion(preset.Id) ?? throw new InvalidOperationException("当前预设没有版本");
+        NameBox.Text = preset?.Name ?? $"{game.Name} 预设";
+        NoteBox.Text = preset?.Note ?? string.Empty;
+        ItemsBox.Text = preset is null
+            ? string.Join(Environment.NewLine, services.Scans.GetWorkshopItems(game.AppId)
+                .Where(item => item.IsSubscribed)
+                .Select(item => item.PublishedFileId))
+            : string.Join(Environment.NewLine, version!.Items.Select(item => item.PublishedFileId));
     }
+
+    public string? CreatedPresetId { get; private set; }
 
     private void Save_Click(object sender, RoutedEventArgs e)
     {
@@ -32,7 +40,10 @@ public partial class PresetEditorWindow : Window
             return;
         }
 
-        var existing = version.Items.ToDictionary(item => item.PublishedFileId, StringComparer.Ordinal);
+        var existing = version?.Items.ToDictionary(item => item.PublishedFileId, StringComparer.Ordinal)
+            ?? new Dictionary<string, PresetItemRecord>(StringComparer.Ordinal);
+        var currentItems = services.Scans.GetWorkshopItems(game.AppId)
+            .ToDictionary(item => item.PublishedFileId, StringComparer.Ordinal);
         var issues = new List<string>();
         var items = new List<PresetItemRecord>();
         var seen = new HashSet<string>(StringComparer.Ordinal);
@@ -57,6 +68,10 @@ public partial class PresetEditorWindow : Window
             {
                 items.Add(oldItem);
             }
+            else if (currentItems.TryGetValue(id, out var currentItem))
+            {
+                items.Add(new(game.AppId, id, currentItem.Title, currentItem.WorkshopUrl, false, "current-subscriptions"));
+            }
             else
             {
                 items.Add(new(game.AppId, id, null, $"https://steamcommunity.com/sharedfiles/filedetails/?id={id}", false, "manual"));
@@ -72,8 +87,24 @@ public partial class PresetEditorWindow : Window
             }
         }
 
-        services.Presets.UpdateMetadata(preset.Id, name, string.IsNullOrWhiteSpace(NoteBox.Text) ? null : NoteBox.Text);
-        services.Presets.CreateVersion(preset.Id, game.AppId, items, "edit");
+        var note = string.IsNullOrWhiteSpace(NoteBox.Text) ? null : NoteBox.Text;
+        if (preset is null)
+        {
+            var manifest = services.Manifests.Create(
+                game,
+                name,
+                note,
+                items.Select(item => new ManifestItem(item.PublishedFileId, item.Title, item.WorkshopUrl, item.IsIgnored, item.Source)).ToArray(),
+                "manual");
+            var created = services.Presets.CreateFromManifest(manifest);
+            CreatedPresetId = created.Id;
+        }
+        else
+        {
+            services.Presets.UpdateMetadata(preset.Id, name, note);
+            services.Presets.CreateVersion(preset.Id, game.AppId, items, "edit");
+        }
+
         DialogResult = true;
     }
 

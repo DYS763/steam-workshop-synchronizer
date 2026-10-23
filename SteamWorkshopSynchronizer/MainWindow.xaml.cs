@@ -200,6 +200,22 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         RefreshDiffRows();
     }
 
+    private void CreatePreset_Click(object sender, RoutedEventArgs e)
+    {
+        if (selectedGame is null)
+        {
+            MessageBox.Show("请先选择游戏。", "新建预设", MessageBoxButton.OK, MessageBoxImage.Information);
+            return;
+        }
+
+        var window = new PresetEditorWindow(selectedGame) { Owner = this };
+        if (window.ShowDialog() == true)
+        {
+            LoadPresets(selectedGame.AppId, window.CreatedPresetId);
+            StatusText = "预设已创建。";
+        }
+    }
+
     private void RefreshDiffRows()
     {
         DiffRows.Clear();

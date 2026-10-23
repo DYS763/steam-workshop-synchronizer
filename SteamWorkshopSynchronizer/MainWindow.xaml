@@ -316,12 +316,24 @@
                             <Button Content="新建" Click="CreatePreset_Click" ToolTip="为当前游戏创建一个 Mod 预设" />
                             <Button Content="编辑" Click="EditPreset_Click" ToolTip="编辑当前预设并保存为新版本" />
                             <Button Content="版本" Click="PresetVersions_Click" Margin="0" ToolTip="查看、回滚或导出预设历史版本" />
-                            <Button Content="导出当前订阅" Click="ExportCurrent_Click" ToolTip="把当前 Steam 订阅导出为清单" />
                             <Button Content="回收站" Click="RecycleBin_Click" ToolTip="查看被工具取消订阅的 Mod 并重新订阅" />
                             <Button Content="操作历史" Click="History_Click" ToolTip="查看操作批次并撤回已提交请求" />
                             <Button Content="撤回最近批次" Click="UndoLatest_Click" Margin="0" ToolTip="快速撤回最近一次成功提交的批次" />
                         </WrapPanel>
-                        <ListBox x:Name="PresetsList" ItemsSource="{Binding Presets}" SelectionChanged="PresetsList_SelectionChanged" DisplayMemberPath="Name" />
+                        <ListBox x:Name="PresetsList" ItemsSource="{Binding Presets}" SelectionChanged="PresetsList_SelectionChanged" ToolTip="选择预设以查看差异；点击右侧图标导出对应预设">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="{Binding Name}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+                                        <Button Grid.Column="1" Width="34" Height="30" Padding="0" Margin="8,0,0,0" Content="↥" FontSize="18" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Tag="{Binding}" Click="ExportPreset_Click" ToolTip="导出此预设为 JSON 文件" />
+                                    </Grid>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
                     </DockPanel>
                 </GroupBox>
 
@@ -333,7 +345,7 @@
                                 <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
                             <WrapPanel>
-                                <Button Content="全选" Click="SelectAll_Click" ToolTip="选择当前列表中所有可执行的订阅或取消订阅项目" />
+                                <Button Content="全选" Click="SelectAll_Click" ToolTip="选择当前列表中的全部 Mod 项目" />
                                 <Button Content="同步所选" Click="SyncSelected_Click" ToolTip="提交选中的订阅或取消订阅请求" />
                                 <Button Content="切换忽略" Click="ToggleIgnore_Click" ToolTip="切换选中清单项的忽略状态并保存新版本" />
                                 <Button Content="暂停" Click="PauseQueue_Click" ToolTip="暂停后续 Steam 请求" />

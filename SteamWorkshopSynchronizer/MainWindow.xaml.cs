@@ -337,16 +337,19 @@ public partial class MainWindow : Window, INotifyPropertyChanged
 
     private void SelectAll_Click(object sender, RoutedEventArgs e)
     {
-        var actionableRows = DiffRows.Where(row => row.Action is not null).ToArray();
-        foreach (var row in actionableRows)
+        foreach (var row in DiffRows)
         {
             row.IsSelected = true;
         }
 
         UpdateSelectionSummary();
-        StatusText = actionableRows.Length == 0
-            ? "当前没有可执行的同步项目"
-            : $"已全选 {actionableRows.Length} 个可执行项目";
+        var modCount = DiffRows.Count;
+        var actionableCount = DiffRows.Count(row => row.Action is not null);
+        StatusText = modCount == 0
+            ? "当前 Mod 列表为空"
+            : actionableCount == 0
+                ? $"已全选 {modCount} 个 Mod 项目，但当前没有可执行动作"
+                : $"已全选 {modCount} 个 Mod 项目，其中 {actionableCount} 个可执行";
     }
 
     private void DiffGrid_ContextMenuOpening(object sender, ContextMenuEventArgs e)
@@ -654,9 +657,27 @@ public partial class MainWindow : Window, INotifyPropertyChanged
 
     private void ExportJson_Click(object sender, RoutedEventArgs e) => ExportManifest(usePreset: selectedPreset is not null, compressed: false, copyToClipboard: false);
 
-    private void ExportCurrent_Click(object sender, RoutedEventArgs e) => ExportManifest(usePreset: false, compressed: false, copyToClipboard: false);
-
     private void CopyCompressed_Click(object sender, RoutedEventArgs e) => ExportManifest(usePreset: selectedPreset is not null, compressed: true, copyToClipboard: true);
+
+    private void ExportPreset_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is not Button button || button.Tag is not PresetSummary preset)
+        {
+            return;
+        }
+
+        if (selectedGame is null || selectedGame.AppId != preset.AppId)
+        {
+            MessageBox.Show("请先选择该预设所属的游戏。", "导出预设", MessageBoxButton.OK, MessageBoxImage.Information);
+            return;
+        }
+
+        var manifest = BuildManifestForPreset(preset);
+        if (manifest is not null)
+        {
+            ExportManifestDocument(manifest, compressed: false, copyToClipboard: false);
+        }
+    }
 
     private void ExportManifest(bool usePreset, bool compressed, bool copyToClipboard)
     {
@@ -667,6 +688,11 @@ public partial class MainWindow : Window, INotifyPropertyChanged
             return;
         }
 
+        ExportManifestDocument(manifest, compressed, copyToClipboard);
+    }
+
+    private void ExportManifestDocument(ManifestDocument manifest, bool compressed, bool copyToClipboard)
+    {
         var json = services.Manifests.Serialize(manifest);
         var output = compressed ? services.CompressedText.EncodeManifest(json) : json;
         if (copyToClipboard)
@@ -833,21 +859,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
 
         if (usePreset && selectedPreset is not null)
         {
-            var version = services.Presets.GetCurrentVersion(selectedPreset.Id);
-            if (version is null)
-            {
-                MessageBox.Show("当前预设没有可导出的版本。", "无法导出", MessageBoxButton.OK, MessageBoxImage.Information);
-                return null;
-            }
-
-            return new(
-                ManifestSerializer.Format,
-                ManifestSerializer.CurrentFormatVersion,
-                new(selectedGame.AppId, selectedGame.Name),
-                new(selectedPreset.Name, selectedPreset.Note),
-                version.Items.Select(item => new ManifestItem(item.PublishedFileId, item.Title, item.WorkshopUrl, item.IsIgnored, item.Source)).ToArray(),
-                DateTimeOffset.UtcNow,
-                "preset");
+            return BuildManifestForPreset(selectedPreset);
         }
 
         var items = services.Scans.GetWorkshopItems(selectedGame.AppId)
@@ -855,6 +867,30 @@ public partial class MainWindow : Window, INotifyPropertyChanged
             .Select(item => new ManifestItem(item.PublishedFileId, item.Title, item.WorkshopUrl, false, "current-subscriptions"))
             .ToArray();
         return services.Manifests.Create(selectedGame, "当前订阅", null, items, "current-subscriptions");
+    }
+
+    private ManifestDocument? BuildManifestForPreset(PresetSummary preset)
+    {
+        if (selectedGame is null)
+        {
+            return null;
+        }
+
+        var version = services.Presets.GetCurrentVersion(preset.Id);
+        if (version is null)
+        {
+            MessageBox.Show("当前预设没有可导出的版本。", "无法导出", MessageBoxButton.OK, MessageBoxImage.Information);
+            return null;
+        }
+
+        return new(
+            ManifestSerializer.Format,
+            ManifestSerializer.CurrentFormatVersion,
+            new(selectedGame.AppId, selectedGame.Name),
+            new(preset.Name, preset.Note),
+            version.Items.Select(item => new ManifestItem(item.PublishedFileId, item.Title, item.WorkshopUrl, item.IsIgnored, item.Source)).ToArray(),
+            DateTimeOffset.UtcNow,
+            "preset");
     }
 
     private void RecycleBin_Click(object sender, RoutedEventArgs e)

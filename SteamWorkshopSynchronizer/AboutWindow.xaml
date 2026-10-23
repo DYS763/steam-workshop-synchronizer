@@ -1,7 +1,7 @@
 <Window x:Class="SteamWorkshopSynchronizer.AboutWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="关于 Steam Workshop Synchronizer"
+        Title="关于 Steam Workshop Synchronizer (SWS)"
         Width="500"
         SizeToContent="Height"
         MinHeight="360"
@@ -11,7 +11,7 @@
         Foreground="{StaticResource GlassTextBrush}">
     <Border Margin="16" Padding="24" Background="{StaticResource GlassPanelBrush}" BorderBrush="{StaticResource GlassBorderBrush}" BorderThickness="1" CornerRadius="12" Effect="{StaticResource GlassWindowShadow}">
         <StackPanel>
-            <TextBlock Text="Steam Workshop Synchronizer" FontSize="24" FontWeight="SemiBold" Foreground="{StaticResource GlassPrimaryBrush}" />
+            <TextBlock Text="Steam Workshop Synchronizer (SWS)" FontSize="24" FontWeight="SemiBold" Foreground="{StaticResource GlassPrimaryBrush}" />
             <TextBlock Text="在玩家之间同步 Steam Workshop Mod 清单" Margin="0,8,0,22" Foreground="{StaticResource GlassMutedTextBrush}" TextWrapping="Wrap" />
 
             <Grid Margin="0,0,0,18">

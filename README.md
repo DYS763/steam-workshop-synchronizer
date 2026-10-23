@@ -1,4 +1,4 @@
-# Steam Workshop Synchronizer
+# Steam Workshop Synchronizer (SWS)
 
 Steam Workshop Synchronizer 是一个面向联机玩家的 Windows 桌面工具，用于扫描本机 Steam 游戏与 Workshop Mod，交换 Mod 清单，并由玩家选择批量订阅或取消订阅。工具使用 Steam 客户端协议提交操作，不保存 Steam 密码或 Web API Key。
 

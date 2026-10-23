@@ -219,6 +219,8 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         SelectionSummary = actionable == 0 ? "没有待执行动作" : $"已选择 {selected}/{actionable} 项";
     }
 
+    private void DiffGrid_CurrentCellChanged(object? sender, EventArgs e) => UpdateSelectionSummary();
+
     private async void SyncSelected_Click(object sender, RoutedEventArgs e)
     {
         DiffGrid.CommitEdit(DataGridEditingUnit.Cell, true);

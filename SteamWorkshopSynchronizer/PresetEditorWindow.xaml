@@ -6,14 +6,17 @@
         Height="620"
         MinWidth="620"
         MinHeight="480"
-        WindowStartupLocation="CenterOwner">
-    <DockPanel Margin="14">
-        <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,10,0,0">
-            <Button Content="保存为新版本" Click="Save_Click" />
-            <Button Content="取消" IsCancel="True" Click="Cancel_Click" />
-        </StackPanel>
-        <TextBlock DockPanel.Dock="Top" Margin="0,0,0,10" Foreground="#555" Text="每行输入一个 Workshop ID 或 Workshop URL。保存会保留旧版本。" TextWrapping="Wrap" />
-        <Grid>
+        WindowStartupLocation="CenterOwner"
+        Background="{StaticResource GlassWindowBrush}"
+        Foreground="{StaticResource GlassTextBrush}">
+    <Border Margin="16" Padding="20" Background="{StaticResource GlassPanelBrush}" BorderBrush="{StaticResource GlassBorderBrush}" BorderThickness="1" CornerRadius="12" Effect="{StaticResource GlassWindowShadow}">
+        <DockPanel>
+            <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,16,0,0">
+                <Button Content="保存为新版本" Click="Save_Click" ToolTip="保存当前输入并保留旧版本" />
+                <Button Content="取消" IsCancel="True" Click="Cancel_Click" Margin="0" ToolTip="放弃当前编辑" />
+            </StackPanel>
+            <TextBlock DockPanel.Dock="Top" Margin="0,0,0,14" Foreground="{StaticResource GlassMutedTextBrush}" Text="每行输入一个 Workshop ID 或 Workshop URL。保存会保留旧版本。" TextWrapping="Wrap" />
+            <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
@@ -24,11 +27,12 @@
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
             <TextBlock Text="名称" VerticalAlignment="Center" Margin="0,0,8,8" />
-            <TextBox x:Name="NameBox" Grid.Column="1" Margin="0,0,0,8" />
+            <TextBox x:Name="NameBox" Grid.Column="1" Margin="0,0,0,8" ToolTip="预设显示名称" />
             <TextBlock Text="备注" Grid.Row="1" VerticalAlignment="Center" Margin="0,0,8,8" />
-            <TextBox x:Name="NoteBox" Grid.Row="1" Grid.Column="1" Margin="0,0,0,8" />
+            <TextBox x:Name="NoteBox" Grid.Row="1" Grid.Column="1" Margin="0,0,0,8" ToolTip="可选的联机说明、版本备注或来源" />
             <TextBlock Text="Mod 列表" Grid.Row="2" VerticalAlignment="Top" Margin="0,8,8,0" />
-            <TextBox x:Name="ItemsBox" Grid.Row="2" Grid.Column="1" AcceptsReturn="True" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" TextWrapping="NoWrap" />
-        </Grid>
-    </DockPanel>
+            <TextBox x:Name="ItemsBox" Grid.Row="2" Grid.Column="1" AcceptsReturn="True" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" TextWrapping="NoWrap" ToolTip="每行填写一个 Workshop ID 或完整 Workshop 地址" />
+            </Grid>
+        </DockPanel>
+    </Border>
 </Window>

@@ -6,11 +6,13 @@
         SizeToContent="Height"
         MinHeight="360"
         ResizeMode="NoResize"
-        WindowStartupLocation="CenterOwner">
-    <Border Padding="28" Background="#F7FAFC">
+        WindowStartupLocation="CenterOwner"
+        Background="{StaticResource GlassWindowBrush}"
+        Foreground="{StaticResource GlassTextBrush}">
+    <Border Margin="16" Padding="24" Background="{StaticResource GlassPanelBrush}" BorderBrush="{StaticResource GlassBorderBrush}" BorderThickness="1" CornerRadius="12" Effect="{StaticResource GlassWindowShadow}">
         <StackPanel>
-            <TextBlock Text="Steam Workshop Synchronizer" FontSize="24" FontWeight="SemiBold" Foreground="#123B56" />
-            <TextBlock Text="在玩家之间同步 Steam Workshop Mod 清单" Margin="0,8,0,22" Foreground="#526779" TextWrapping="Wrap" />
+            <TextBlock Text="Steam Workshop Synchronizer" FontSize="24" FontWeight="SemiBold" Foreground="{StaticResource GlassPrimaryBrush}" />
+            <TextBlock Text="在玩家之间同步 Steam Workshop Mod 清单" Margin="0,8,0,22" Foreground="{StaticResource GlassMutedTextBrush}" TextWrapping="Wrap" />
 
             <Grid Margin="0,0,0,18">
                 <Grid.ColumnDefinitions>
@@ -34,12 +36,12 @@
             </Grid>
 
             <TextBlock Text="项目地址" FontWeight="SemiBold" />
-            <TextBlock Margin="0,5,0,20" Foreground="#0D7485" TextWrapping="Wrap">
+            <TextBlock Margin="0,5,0,20" Foreground="{StaticResource GlassPrimaryBrush}" TextWrapping="Wrap" ToolTip="点击打开项目主页">
                 <Hyperlink NavigateUri="https://github.com/DYS763/steam-workshop-synchronizer" RequestNavigate="ProjectLink_RequestNavigate">https://github.com/DYS763/steam-workshop-synchronizer</Hyperlink>
             </TextBlock>
-            <TextBlock Text="Copyright © 2026 DYS" Foreground="#526779" />
-            <TextBlock Text="Licensed under the MIT License." Foreground="#526779" />
-            <Button Content="关闭" Width="92" HorizontalAlignment="Right" Margin="0,22,0,0" IsDefault="True" Click="Close_Click" />
+            <TextBlock Text="Copyright © 2026 DYS" Foreground="{StaticResource GlassMutedTextBrush}" />
+            <TextBlock Text="Licensed under the MIT License." Foreground="{StaticResource GlassMutedTextBrush}" />
+            <Button Content="关闭" Width="92" HorizontalAlignment="Right" Margin="0,22,0,0" IsDefault="True" Click="Close_Click" ToolTip="关闭关于窗口" />
         </StackPanel>
     </Border>
 </Window>

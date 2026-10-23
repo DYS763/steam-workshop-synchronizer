@@ -6,16 +6,19 @@
         Height="500"
         MinWidth="620"
         MinHeight="340"
-        WindowStartupLocation="CenterOwner">
-    <DockPanel Margin="12">
-        <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,10,0,0">
-            <Button Content="设为当前版本" Click="SetCurrent_Click" />
-            <Button Content="导出选中版本" Click="ExportSelected_Click" />
-            <Button Content="复制压缩文本" Click="CopyCompressed_Click" />
-            <Button Content="关闭" IsCancel="True" Click="Close_Click" />
-        </StackPanel>
-        <TextBlock DockPanel.Dock="Top" Margin="0,0,0,8" Text="旧版本默认不参与普通导出；选择后可以设为当前或单独导出。" Foreground="#555" TextWrapping="Wrap" />
-        <ListBox x:Name="VersionsList" ItemsSource="{Binding Versions}" SelectedItem="{Binding SelectedVersion}">
+        WindowStartupLocation="CenterOwner"
+        Background="{StaticResource GlassWindowBrush}"
+        Foreground="{StaticResource GlassTextBrush}">
+    <Border Margin="16" Padding="18" Background="{StaticResource GlassPanelBrush}" BorderBrush="{StaticResource GlassBorderBrush}" BorderThickness="1" CornerRadius="12" Effect="{StaticResource GlassWindowShadow}">
+        <DockPanel>
+            <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,16,0,0">
+                <Button Content="设为当前版本" Click="SetCurrent_Click" ToolTip="将选中历史版本设为预设当前版本" />
+                <Button Content="导出选中版本" Click="ExportSelected_Click" ToolTip="将选中版本导出为 JSON 文件" />
+                <Button Content="复制压缩文本" Click="CopyCompressed_Click" ToolTip="复制选中版本的压缩清单文本" />
+                <Button Content="关闭" IsCancel="True" Click="Close_Click" Margin="0" ToolTip="关闭版本窗口" />
+            </StackPanel>
+            <TextBlock DockPanel.Dock="Top" Margin="0,0,0,12" Text="旧版本默认不参与普通导出；选择后可以设为当前或单独导出。" Foreground="{StaticResource GlassMutedTextBrush}" TextWrapping="Wrap" />
+            <ListBox x:Name="VersionsList" ItemsSource="{Binding Versions}" SelectedItem="{Binding SelectedVersion}" ToolTip="选择要回滚或导出的预设版本">
             <ListBox.ItemTemplate>
                 <DataTemplate>
                     <Grid Margin="4">
@@ -32,6 +35,7 @@
                     </Grid>
                 </DataTemplate>
             </ListBox.ItemTemplate>
-        </ListBox>
-    </DockPanel>
+            </ListBox>
+        </DockPanel>
+    </Border>
 </Window>

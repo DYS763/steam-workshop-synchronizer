@@ -6,23 +6,28 @@
         Height="650"
         MinWidth="700"
         MinHeight="420"
-        WindowStartupLocation="CenterOwner">
-    <DockPanel Margin="12">
-        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0,0,0,10">
-            <Button Content="刷新" Click="Refresh_Click" />
-            <Button Content="复制全部" Click="Copy_Click" />
-            <Button Content="打开日志目录" Click="OpenDirectory_Click" />
-            <Button Content="清空当天日志" Click="Clear_Click" />
-            <TextBlock x:Name="PathText" VerticalAlignment="Center" Margin="8,0,0,0" Foreground="#666" TextWrapping="Wrap" />
-        </StackPanel>
-        <TextBox x:Name="LogTextBox"
-                 IsReadOnly="True"
-                 AcceptsReturn="True"
-                 AcceptsTab="True"
-                 FontFamily="Consolas"
-                 FontSize="12"
-                 HorizontalScrollBarVisibility="Auto"
-                 VerticalScrollBarVisibility="Auto"
-                 TextWrapping="NoWrap" />
-    </DockPanel>
+        WindowStartupLocation="CenterOwner"
+        Background="{StaticResource GlassWindowBrush}"
+        Foreground="{StaticResource GlassTextBrush}">
+    <Border Margin="16" Padding="18" Background="{StaticResource GlassPanelBrush}" BorderBrush="{StaticResource GlassBorderBrush}" BorderThickness="1" CornerRadius="12" Effect="{StaticResource GlassWindowShadow}">
+        <DockPanel>
+            <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0,0,0,12">
+                <Button Content="刷新" Click="Refresh_Click" ToolTip="重新读取当前日志文件" />
+                <Button Content="复制全部" Click="Copy_Click" ToolTip="复制当前日志文本" />
+                <Button Content="打开日志目录" Click="OpenDirectory_Click" ToolTip="在资源管理器中打开日志文件夹" />
+                <Button Content="清空当天日志" Click="Clear_Click" Margin="0" ToolTip="删除当前 UTC+8 日期的日志内容" />
+                <TextBlock x:Name="PathText" VerticalAlignment="Center" Margin="12,0,0,0" Foreground="{StaticResource GlassSubtleTextBrush}" TextWrapping="Wrap" />
+            </StackPanel>
+            <TextBox x:Name="LogTextBox"
+                     IsReadOnly="True"
+                     AcceptsReturn="True"
+                     AcceptsTab="True"
+                     FontFamily="Consolas"
+                     FontSize="12"
+                     HorizontalScrollBarVisibility="Auto"
+                     VerticalScrollBarVisibility="Auto"
+                     TextWrapping="NoWrap"
+                     ToolTip="开发者模式下的详细运行日志；时间显示为 UTC+8" />
+        </DockPanel>
+    </Border>
 </Window>

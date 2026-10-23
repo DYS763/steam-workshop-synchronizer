@@ -6,14 +6,17 @@
         Height="520"
         MinWidth="680"
         MinHeight="360"
-        WindowStartupLocation="CenterOwner">
-    <DockPanel Margin="12">
-        <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,10,0,0">
-            <Button Content="撤回选中批次" Click="UndoSelected_Click" />
-            <Button Content="关闭" IsCancel="True" Click="Close_Click" />
-        </StackPanel>
-        <TextBlock DockPanel.Dock="Top" Margin="0,0,0,8" Text="只会反向处理该批次中已成功提交的项目；执行前建议重新扫描 Steam。" Foreground="#555" TextWrapping="Wrap" />
-        <ListBox x:Name="HistoryList" ItemsSource="{Binding History}" SelectedItem="{Binding SelectedBatch}">
+        WindowStartupLocation="CenterOwner"
+        Background="{StaticResource GlassWindowBrush}"
+        Foreground="{StaticResource GlassTextBrush}">
+    <Border Margin="16" Padding="18" Background="{StaticResource GlassPanelBrush}" BorderBrush="{StaticResource GlassBorderBrush}" BorderThickness="1" CornerRadius="12" Effect="{StaticResource GlassWindowShadow}">
+        <DockPanel>
+            <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,16,0,0">
+                <Button Content="撤回选中批次" Click="UndoSelected_Click" ToolTip="对选中批次中已成功提交的项目创建反向操作" />
+                <Button Content="关闭" IsCancel="True" Click="Close_Click" Margin="0" ToolTip="关闭操作历史" />
+            </StackPanel>
+            <TextBlock DockPanel.Dock="Top" Margin="0,0,0,12" Text="只会反向处理该批次中已成功提交的项目；执行前建议重新扫描 Steam。" Foreground="{StaticResource GlassMutedTextBrush}" TextWrapping="Wrap" />
+            <ListBox x:Name="HistoryList" ItemsSource="{Binding History}" SelectedItem="{Binding SelectedBatch}" ToolTip="选择要撤回的操作批次">
             <ListBox.ItemTemplate>
                 <DataTemplate>
                     <Grid Margin="4">
@@ -30,6 +33,7 @@
                     </Grid>
                 </DataTemplate>
             </ListBox.ItemTemplate>
-        </ListBox>
-    </DockPanel>
+            </ListBox>
+        </DockPanel>
+    </Border>
 </Window>

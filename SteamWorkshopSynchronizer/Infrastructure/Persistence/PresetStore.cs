@@ -1,20 +1,24 @@
 using Microsoft.Data.Sqlite;
 using SteamWorkshopSynchronizer.Core.Models;
+using SteamWorkshopSynchronizer.Infrastructure.Diagnostics;
 
 namespace SteamWorkshopSynchronizer.Infrastructure.Persistence;
 
 public sealed class PresetStore
 {
     private readonly SqliteDatabase database;
+    private readonly AppLogger? logger;
 
-    public PresetStore(SqliteDatabase database)
+    public PresetStore(SqliteDatabase database, AppLogger? logger = null)
     {
         this.database = database ?? throw new ArgumentNullException(nameof(database));
+        this.logger = logger;
     }
 
     public PresetSummary CreateFromManifest(ManifestDocument manifest)
     {
         ArgumentNullException.ThrowIfNull(manifest);
+        logger?.Info("预设", $"从清单创建预设：AppID {manifest.Game.AppId}，项目 {manifest.Items.Count} 项");
         var presetId = Guid.NewGuid().ToString("N");
         var versionId = Guid.NewGuid().ToString("N");
         var now = DateTimeOffset.UtcNow;
@@ -31,6 +35,7 @@ public sealed class PresetStore
             ("$versionId", versionId), ("$createdAt", timestamp), ("$updatedAt", timestamp));
         InsertVersion(transaction, versionId, presetId, 1, now, "import", null, manifest.Items, manifest.Game.AppId);
         transaction.Commit();
+        logger?.Info("预设", $"预设创建完成：{presetName}（{presetId}）");
 
         return new(presetId, manifest.Game.AppId, presetName, manifest.Preset.Note, manifest.Source, versionId, now, now);
     }
@@ -139,6 +144,7 @@ public sealed class PresetStore
             ("$versionId", versionId), ("$updatedAt", timestamp), ("$presetId", presetId));
 
         transaction.Commit();
+        logger?.Info("预设", $"预设 {presetId} 已创建版本 {nextVersion}，项目 {itemList.Length} 项，原因：{reason}");
         return new(versionId, presetId, nextVersion, now, reason, sourceBatchId, itemList);
     }
 
@@ -157,6 +163,7 @@ public sealed class PresetStore
               AND EXISTS (SELECT 1 FROM preset_versions WHERE id = $versionId AND preset_id = $presetId);
             """, ("$versionId", versionId), ("$presetId", presetId), ("$updatedAt", DateTimeOffset.UtcNow.ToString("O")));
         transaction.Commit();
+        logger?.Info("预设", $"预设 {presetId} 已切换当前版本：{versionId}");
     }
 
     public void Archive(string presetId)
@@ -168,6 +175,7 @@ public sealed class PresetStore
         command.Parameters.AddWithValue("$archivedAt", DateTimeOffset.UtcNow.ToString("O"));
         command.Parameters.AddWithValue("$id", presetId);
         command.ExecuteNonQuery();
+        logger?.Info("预设", $"预设已归档：{presetId}");
     }
 
     public void UpdateMetadata(string presetId, string name, string? note)
@@ -182,6 +190,7 @@ public sealed class PresetStore
         command.Parameters.AddWithValue("$updatedAt", DateTimeOffset.UtcNow.ToString("O"));
         command.Parameters.AddWithValue("$id", presetId);
         command.ExecuteNonQuery();
+        logger?.Info("预设", $"预设元数据已更新：{presetId}");
     }
 
     private static void InsertVersion(

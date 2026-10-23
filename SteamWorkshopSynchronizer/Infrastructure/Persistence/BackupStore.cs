@@ -5,6 +5,7 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using Microsoft.Data.Sqlite;
 using SteamWorkshopSynchronizer.Core.Models;
+using SteamWorkshopSynchronizer.Infrastructure.Diagnostics;
 
 namespace SteamWorkshopSynchronizer.Infrastructure.Persistence;
 
@@ -44,10 +45,12 @@ public sealed class BackupStore
     ];
 
     private readonly SqliteDatabase database;
+    private readonly AppLogger? logger;
 
-    public BackupStore(SqliteDatabase database)
+    public BackupStore(SqliteDatabase database, AppLogger? logger = null)
     {
         this.database = database ?? throw new ArgumentNullException(nameof(database));
+        this.logger = logger;
     }
 
     public string ExportCompressed(string toolVersion)
@@ -68,7 +71,9 @@ public sealed class BackupStore
             ["toolVersion"] = toolVersion,
             ["tables"] = tables
         };
-        return Prefix + Encode(Encoding.UTF8.GetBytes(root.ToJsonString(new JsonSerializerOptions { WriteIndented = false })));
+        var result = Prefix + Encode(Encoding.UTF8.GetBytes(root.ToJsonString(new JsonSerializerOptions { WriteIndented = false })));
+        logger?.Info("备份", $"备份导出完成，工具版本 {toolVersion}，文本长度 {result.Length}");
+        return result;
     }
 
     public BackupRestoreResult RestoreCompressed(
@@ -140,6 +145,7 @@ public sealed class BackupStore
         }
 
         transaction.Commit();
+        logger?.Info("恢复", $"备份恢复完成，模式 {mode}，导入 {importedRows} 行，跳过 {skippedRows} 行");
         return new(mode, safetySnapshotPath, importedRows, skippedRows);
     }
 

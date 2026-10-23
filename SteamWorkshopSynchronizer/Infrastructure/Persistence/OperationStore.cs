@@ -1,16 +1,19 @@
 using Microsoft.Data.Sqlite;
 using SteamWorkshopSynchronizer.Core.Models;
 using SteamWorkshopSynchronizer.Core.Operations;
+using SteamWorkshopSynchronizer.Infrastructure.Diagnostics;
 
 namespace SteamWorkshopSynchronizer.Infrastructure.Persistence;
 
 public sealed class OperationStore
 {
     private readonly SqliteDatabase database;
+    private readonly AppLogger? logger;
 
-    public OperationStore(SqliteDatabase database)
+    public OperationStore(SqliteDatabase database, AppLogger? logger = null)
     {
         this.database = database ?? throw new ArgumentNullException(nameof(database));
+        this.logger = logger;
     }
 
     public string CreateBatch(
@@ -45,6 +48,7 @@ public sealed class OperationStore
         }
 
         transaction.Commit();
+        logger?.Info("数据库", $"创建操作批次 {batchId}：{kind}，共 {requests.Count} 项");
         return batchId;
     }
 
@@ -79,6 +83,14 @@ public sealed class OperationStore
         }
 
         transaction.Commit();
+        if (result.State == WorkshopOperationResultState.Failed)
+        {
+            logger?.Error("数据库", $"记录操作结果失败：批次 {batchId}，Workshop ID {result.Request.PublishedFileId}，{result.ErrorMessage}");
+        }
+        else
+        {
+            logger?.Info("数据库", $"记录操作结果：批次 {batchId}，Workshop ID {result.Request.PublishedFileId}，{result.State}");
+        }
     }
 
     public void FinishBatch(string batchId, string status, string? error = null)
@@ -97,6 +109,7 @@ public sealed class OperationStore
         command.Parameters.AddWithValue("$error", (object?)error ?? DBNull.Value);
         command.Parameters.AddWithValue("$id", batchId);
         command.ExecuteNonQuery();
+        logger?.Info("数据库", $"操作批次 {batchId} 已结束，状态：{status}");
     }
 
     public IReadOnlyList<OperationBatchSummary> GetHistory(int limit = 100)

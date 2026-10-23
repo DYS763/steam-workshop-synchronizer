@@ -1,5 +1,6 @@
 using Microsoft.Data.Sqlite;
 using SteamWorkshopSynchronizer.Core.Models;
+using SteamWorkshopSynchronizer.Infrastructure.Diagnostics;
 using SteamWorkshopSynchronizer.Infrastructure.Steam;
 
 namespace SteamWorkshopSynchronizer.Infrastructure.Persistence;
@@ -7,15 +8,18 @@ namespace SteamWorkshopSynchronizer.Infrastructure.Persistence;
 public sealed class ScanStore
 {
     private readonly SqliteDatabase database;
+    private readonly AppLogger? logger;
 
-    public ScanStore(SqliteDatabase database)
+    public ScanStore(SqliteDatabase database, AppLogger? logger = null)
     {
         this.database = database ?? throw new ArgumentNullException(nameof(database));
+        this.logger = logger;
     }
 
     public void SaveSnapshot(SteamScanSnapshot snapshot)
     {
         ArgumentNullException.ThrowIfNull(snapshot);
+        logger?.Info("数据库", $"保存扫描快照：{snapshot.Games.Count} 个游戏，{snapshot.WorkshopItems.Count} 个 Workshop 项");
         using var connection = database.OpenConnection();
         using var transaction = connection.BeginTransaction();
         var scanId = Guid.NewGuid().ToString("N");
@@ -72,6 +76,7 @@ public sealed class ScanStore
             """, ("$id", scanId), ("$status", snapshot.Warnings.Count == 0 ? "completed" : "partial"),
             ("$startedAt", now), ("$finishedAt", now), ("$summary", summary));
         transaction.Commit();
+        logger?.Info("数据库", $"扫描快照保存完成，提示 {snapshot.Warnings.Count} 条");
     }
 
     public void EnsureGame(GameInfo game)

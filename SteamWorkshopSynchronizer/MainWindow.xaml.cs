@@ -1096,12 +1096,16 @@ public partial class MainWindow : Window, INotifyPropertyChanged
             item.PublishedFileId,
             string.IsNullOrWhiteSpace(item.Title) ? GetFallbackTitle(item.PublishedFileId) : item.Title,
             item.WorkshopUrl,
-            item.IsLocalResidual ? "本地残留" : item.DownloadState switch
-            {
-                WorkshopDownloadState.Downloaded => "已订阅",
-                WorkshopDownloadState.Pending => "订阅中",
-                _ => "状态未知"
-            },
+            item.IsLocalResidual ? "本地残留" : item.IsSubscribed
+                ? item.DownloadState switch
+                {
+                    WorkshopDownloadState.Downloaded => "已订阅",
+                    WorkshopDownloadState.Pending => "订阅中",
+                    _ => "已订阅（状态未知）"
+                }
+                : item.DownloadState == WorkshopDownloadState.Downloaded
+                    ? "已下载（订阅未知）"
+                    : "状态未知",
             null,
             false,
             false,

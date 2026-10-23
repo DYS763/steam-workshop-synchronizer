@@ -9,17 +9,28 @@ public sealed class SteamDiscoveryService
 {
     private readonly SteamLocator locator;
     private readonly SteamVdfParser parser;
+    private readonly SteamWorkshopMetadataService? metadata;
     private readonly AppLogger? logger;
 
-    public SteamDiscoveryService(SteamLocator? locator = null, SteamVdfParser? parser = null, AppLogger? logger = null)
+    public SteamDiscoveryService(
+        SteamLocator? locator = null,
+        SteamVdfParser? parser = null,
+        AppLogger? logger = null,
+        SteamWorkshopMetadataService? metadata = null)
     {
         this.locator = locator ?? new SteamLocator();
         this.parser = parser ?? new SteamVdfParser();
         this.logger = logger;
+        this.metadata = metadata;
     }
 
-    public Task<SteamScanSnapshot> ScanAsync(CancellationToken cancellationToken = default) =>
-        Task.Run(() => Scan(cancellationToken), cancellationToken);
+    public async Task<SteamScanSnapshot> ScanAsync(CancellationToken cancellationToken = default)
+    {
+        var snapshot = await Task.Run(() => Scan(cancellationToken), cancellationToken).ConfigureAwait(false);
+        return metadata is null
+            ? snapshot
+            : await metadata.EnrichSnapshotAsync(snapshot, cancellationToken).ConfigureAwait(false);
+    }
 
     public SteamScanSnapshot Scan(CancellationToken cancellationToken = default)
     {

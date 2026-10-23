@@ -169,12 +169,13 @@ public partial class MainWindow : Window, INotifyPropertyChanged
             ?? games.FirstOrDefault(game => game.AppId == selectedGame?.AppId)
             ?? games.FirstOrDefault();
         GamesList.SelectedItem = next;
-        if (next is null && selectedGame is null)
+        if (next is null)
         {
             selectedPreset = null;
+            selectedGame = null;
             Presets.Clear();
             DiffRows.Clear();
-            SelectionSummary = "未发现已安装游戏";
+            SelectionSummary = allGames.Count == 0 ? "未发现已安装游戏" : "没有匹配的游戏";
         }
     }
 
@@ -249,6 +250,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
             }
 
             UpdateSelectionSummary();
+            _ = EnrichMissingDiffTitlesAsync(selectedGame.AppId, DiffRows.ToArray());
             return;
         }
 
@@ -273,7 +275,46 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         }
 
         UpdateSelectionSummary();
+        _ = EnrichMissingDiffTitlesAsync(selectedGame.AppId, DiffRows.ToArray());
     }
+
+    private async Task EnrichMissingDiffTitlesAsync(int appId, IReadOnlyList<DiffRow> rows)
+    {
+        var missing = rows
+            .Where(row => row.DisplayTitle == GetFallbackTitle(row.PublishedFileId))
+            .Select(row => row.PublishedFileId)
+            .ToArray();
+        if (missing.Length == 0)
+        {
+            return;
+        }
+
+        try
+        {
+            var titles = await services.Metadata.ResolveTitlesAsync(missing).ConfigureAwait(false);
+            await Dispatcher.InvokeAsync(() =>
+            {
+                if (selectedGame?.AppId != appId)
+                {
+                    return;
+                }
+
+                foreach (var row in rows)
+                {
+                    if (titles.TryGetValue(row.PublishedFileId, out var title))
+                    {
+                        row.SetDisplayTitle(title);
+                    }
+                }
+            });
+        }
+        catch (Exception exception)
+        {
+            services.Logger.Warning("Mod名称", "更新差异列表名称失败", exception);
+        }
+    }
+
+    private static string GetFallbackTitle(string publishedFileId) => $"Workshop Mod {publishedFileId}";
 
     private void UpdateSelectionSummary()
     {
@@ -931,6 +972,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
     public sealed class DiffRow : INotifyPropertyChanged
     {
         private bool isSelected;
+        private string displayTitle = string.Empty;
 
         private DiffRow(
             string publishedFileId,
@@ -943,7 +985,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
             bool isIgnored)
         {
             PublishedFileId = publishedFileId;
-            DisplayTitle = displayTitle;
+            this.displayTitle = displayTitle;
             WorkshopUrl = workshopUrl;
             StatusText = statusText;
             Action = action;
@@ -953,7 +995,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         }
 
         public string PublishedFileId { get; }
-        public string DisplayTitle { get; }
+        public string DisplayTitle => displayTitle;
         public string? WorkshopUrl { get; }
         public string StatusText { get; }
         public WorkshopOperationAction? Action { get; }
@@ -983,9 +1025,20 @@ public partial class MainWindow : Window, INotifyPropertyChanged
 
         public event PropertyChangedEventHandler? PropertyChanged;
 
+        public void SetDisplayTitle(string title)
+        {
+            if (string.IsNullOrWhiteSpace(title) || string.Equals(displayTitle, title, StringComparison.Ordinal))
+            {
+                return;
+            }
+
+            displayTitle = title;
+            PropertyChanged?.Invoke(this, new(nameof(DisplayTitle)));
+        }
+
         public static DiffRow FromDiff(Core.Comparison.WorkshopDiffEntry entry) => new(
             entry.PublishedFileId,
-            string.IsNullOrWhiteSpace(entry.Title) ? $"Workshop Mod {entry.PublishedFileId}" : entry.Title,
+            string.IsNullOrWhiteSpace(entry.Title) ? GetFallbackTitle(entry.PublishedFileId) : entry.Title,
             entry.WorkshopUrl,
             GetDiffStatusText(entry.Kind, entry.IsIgnored),
             entry.Kind switch
@@ -1000,7 +1053,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
 
         public static DiffRow FromCurrent(WorkshopItemSnapshot item) => new(
             item.PublishedFileId,
-            string.IsNullOrWhiteSpace(item.Title) ? $"Workshop Mod {item.PublishedFileId}" : item.Title,
+            string.IsNullOrWhiteSpace(item.Title) ? GetFallbackTitle(item.PublishedFileId) : item.Title,
             item.WorkshopUrl,
             item.IsLocalResidual ? "本地残留" : item.DownloadState switch
             {

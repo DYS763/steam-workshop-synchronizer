@@ -21,6 +21,7 @@ public sealed class AppServices
         ManifestSerializer manifests,
         CompressedTextCodec compressedText,
         WorkshopDiffCalculator diffs,
+        SteamWorkshopMetadataService metadata,
         SteamProtocolOperator steamOperator,
         WorkshopOperationQueue operationQueue)
     {
@@ -35,6 +36,7 @@ public sealed class AppServices
         Manifests = manifests;
         CompressedText = compressedText;
         Diffs = diffs;
+        Metadata = metadata;
         SteamOperator = steamOperator;
         OperationQueue = operationQueue;
     }
@@ -50,6 +52,7 @@ public sealed class AppServices
     public ManifestSerializer Manifests { get; }
     public CompressedTextCodec CompressedText { get; }
     public WorkshopDiffCalculator Diffs { get; }
+    public SteamWorkshopMetadataService Metadata { get; }
     public SteamProtocolOperator SteamOperator { get; }
     public WorkshopOperationQueue OperationQueue { get; }
 
@@ -60,6 +63,7 @@ public sealed class AppServices
         var settings = new AppSettingsStore(database);
         var logger = new AppLogger(AppDataPaths.LogDirectory, settings.GetBool(AppSettingsStore.DeveloperModeKey));
         logger.Info("启动", $"应用服务初始化开始，数据库：{database.DatabasePath}");
+        var metadata = new SteamWorkshopMetadataService(logger);
         var steamOperator = new SteamProtocolOperator(logger);
         return new(
             database,
@@ -69,10 +73,11 @@ public sealed class AppServices
             new PresetStore(database, logger),
             new OperationStore(database, logger),
             new BackupStore(database, logger),
-            new SteamDiscoveryService(logger: logger),
+            new SteamDiscoveryService(logger: logger, metadata: metadata),
             new ManifestSerializer(),
             new CompressedTextCodec(),
             new WorkshopDiffCalculator(),
+            metadata,
             steamOperator,
             new WorkshopOperationQueue(steamOperator, logger));
     }

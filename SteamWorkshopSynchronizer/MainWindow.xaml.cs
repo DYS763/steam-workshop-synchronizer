@@ -19,6 +19,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
     private GameInfo? selectedGame;
     private PresetSummary? selectedPreset;
     private bool isLoading;
+    private string? lastFailureText;
     private string statusText = "正在准备扫描...";
     private string selectionSummary = "未选择操作";
 
@@ -270,8 +271,9 @@ public partial class MainWindow : Window, INotifyPropertyChanged
             StatusText = $"已提交 {submitted} 项，失败 {failed} 项；请等待 Steam 完成后重新扫描。";
             if (failed > 0)
             {
-                var details = string.Join(Environment.NewLine, results.Where(result => result.State == WorkshopOperationResultState.Failed).Select(result => $"{result.Request.PublishedFileId}: {result.ErrorMessage}"));
-                MessageBox.Show(details, "部分 Steam 请求失败", MessageBoxButton.OK, MessageBoxImage.Warning);
+                lastFailureText = BuildFailureText(results.Where(result => result.State == WorkshopOperationResultState.Failed));
+                Clipboard.SetText(lastFailureText);
+                MessageBox.Show("失败清单已复制到剪贴板，包含 Mod 名称、Workshop 地址、ID 和失败原因。也可以使用顶部按钮导出为 TXT。", "部分 Steam 请求失败", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
         }
         catch (OperationCanceledException)
@@ -556,6 +558,59 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         {
             MessageBox.Show($"恢复失败：{exception.Message}", "恢复失败", MessageBoxButton.OK, MessageBoxImage.Warning);
         }
+    }
+
+    private void CopyFailures_Click(object sender, RoutedEventArgs e)
+    {
+        if (string.IsNullOrWhiteSpace(lastFailureText))
+        {
+            MessageBox.Show("当前没有失败的 Steam 请求。", "失败清单", MessageBoxButton.OK, MessageBoxImage.Information);
+            return;
+        }
+
+        Clipboard.SetText(lastFailureText);
+        StatusText = "失败清单已复制";
+    }
+
+    private void ExportFailures_Click(object sender, RoutedEventArgs e)
+    {
+        if (string.IsNullOrWhiteSpace(lastFailureText))
+        {
+            MessageBox.Show("当前没有失败的 Steam 请求。", "失败清单", MessageBoxButton.OK, MessageBoxImage.Information);
+            return;
+        }
+
+        var dialog = new SaveFileDialog
+        {
+            Filter = "失败清单文本|*.txt|所有文件|*.*",
+            FileName = $"steam-workshop-failures-{DateTime.Now:yyyyMMdd-HHmmss}.txt",
+            Title = "导出失败清单"
+        };
+        if (dialog.ShowDialog(this) == true)
+        {
+            File.WriteAllText(dialog.FileName, lastFailureText, new UTF8Encoding(false));
+            StatusText = $"已导出失败清单：{dialog.FileName}";
+        }
+    }
+
+    private static string BuildFailureText(IEnumerable<WorkshopOperationResult> failures)
+    {
+        var builder = new StringBuilder();
+        builder.AppendLine("Steam Workshop Synchronizer 失败清单");
+        builder.AppendLine($"生成时间：{DateTimeOffset.Now:O}");
+        builder.AppendLine();
+        foreach (var failure in failures)
+        {
+            var request = failure.Request;
+            builder.AppendLine($"名称：{request.Title ?? "未获取标题"}");
+            builder.AppendLine($"Workshop ID：{request.PublishedFileId}");
+            builder.AppendLine($"Workshop 地址：{request.WorkshopUrl ?? $"https://steamcommunity.com/sharedfiles/filedetails/?id={request.PublishedFileId}"}");
+            builder.AppendLine($"动作：{(request.Action == WorkshopOperationAction.Subscribe ? "订阅" : "取消订阅")}");
+            builder.AppendLine($"失败原因：{failure.ErrorMessage ?? "未知错误"}");
+            builder.AppendLine();
+        }
+
+        return builder.ToString();
     }
 
     private ManifestDocument? BuildManifest(bool usePreset)

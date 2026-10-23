@@ -36,6 +36,8 @@
                     <Button Content="复制压缩文本" Click="CopyCompressed_Click" />
                     <Button Content="备份数据" Click="Backup_Click" />
                     <Button Content="恢复数据" Click="Restore_Click" />
+                    <Button Content="复制失败清单" Click="CopyFailures_Click" />
+                    <Button Content="导出失败清单" Click="ExportFailures_Click" />
                 </StackPanel>
                 <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
                     <TextBlock Text="状态：" FontWeight="SemiBold" />

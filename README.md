@@ -46,7 +46,7 @@ Workshop 名称优先从本地 Mod 元数据读取；读取不到时尝试请求
 
 ## 开发者模式
 
-开发者模式默认关闭。开启后会记录启动、扫描、数据库、预设、备份、导入导出、Steam 协议和操作队列的详细过程；警告和错误始终记录。日志按天写入 `%LOCALAPPDATA%\\SteamWorkshopSynchronizer\\logs\\app-YYYYMMDD.log`，默认保留最近 14 天。日志不会记录密码、令牌或 Web API Key。
+开发者模式默认关闭。开启后会记录启动、扫描、数据库、预设、备份、导入导出、Steam 协议和操作队列的详细过程；警告和错误始终记录。日志时间统一使用 UTC+8，按天写入 `%LOCALAPPDATA%\\SteamWorkshopSynchronizer\\logs\\app-YYYYMMDD.log`，默认保留最近 14 天。日志不会记录密码、令牌或 Web API Key。
 
 ## 构建
 

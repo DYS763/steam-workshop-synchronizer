@@ -10,6 +10,7 @@ namespace SteamWorkshopSynchronizer.Infrastructure.Diagnostics;
 /// </summary>
 public sealed class AppLogger
 {
+    private static readonly TimeSpan ChinaStandardOffset = TimeSpan.FromHours(8);
     private readonly string logDirectory;
     private readonly object writeLock = new();
     private readonly int retentionDays;
@@ -29,7 +30,9 @@ public sealed class AppLogger
 
     public string LogDirectory => logDirectory;
 
-    public string CurrentLogPath => Path.Combine(logDirectory, $"app-{DateTime.Now:yyyyMMdd}.log");
+    public string CurrentLogPath => Path.Combine(logDirectory, $"app-{ChinaStandardNow:yyyyMMdd}.log");
+
+    private static DateTimeOffset ChinaStandardNow => DateTimeOffset.UtcNow.ToOffset(ChinaStandardOffset);
 
     public bool DeveloperMode
     {
@@ -102,7 +105,7 @@ public sealed class AppLogger
 
                 Directory.CreateDirectory(logDirectory);
                 var builder = new StringBuilder();
-                builder.Append(DateTimeOffset.UtcNow.ToString("O", CultureInfo.InvariantCulture));
+                builder.Append(ChinaStandardNow.ToString("O", CultureInfo.InvariantCulture));
                 builder.Append(" [").Append(level.ToString().ToUpperInvariant()).Append("]");
                 builder.Append(" [").Append(Sanitize(category)).Append("]");
                 builder.Append(" [T").Append(Environment.CurrentManagedThreadId).Append("] ");
@@ -115,7 +118,7 @@ public sealed class AppLogger
                 }
 
                 File.AppendAllText(CurrentLogPath, builder.ToString(), Encoding.UTF8);
-                CleanupOldLogs(DateTime.Now.Date);
+                CleanupOldLogs(ChinaStandardNow.Date);
             }
         }
         catch

@@ -151,10 +151,14 @@ public partial class MainWindow : Window, INotifyPropertyChanged
 
     private void GameSearchBox_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e) => ApplyGameFilter();
 
+    private void OnlyGamesWithMods_Click(object sender, RoutedEventArgs e) => ApplyGameFilter();
+
     private void ApplyGameFilter(int? preferredAppId = null)
     {
         var query = GameSearchBox?.Text.Trim() ?? string.Empty;
+        var onlyGamesWithMods = OnlyGamesWithModsCheckBox?.IsChecked == true;
         var games = allGames
+            .Where(game => !onlyGamesWithMods || game.HasMods)
             .Where(game => query.Length == 0
                 || game.Name.Contains(query, StringComparison.CurrentCultureIgnoreCase)
                 || game.AppId.ToString().Contains(query, StringComparison.OrdinalIgnoreCase))
@@ -244,7 +248,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         var currentItems = services.Scans.GetWorkshopItems(selectedGame.AppId);
         if (selectedPreset is null)
         {
-            foreach (var item in currentItems.Where(item => item.IsSubscribed || item.IsLocalResidual))
+            foreach (var item in currentItems.Where(item => item.IsSubscribed || item.IsLocalResidual || item.DownloadState == WorkshopDownloadState.Downloaded))
             {
                 DiffRows.Add(DiffRow.FromCurrent(item));
             }

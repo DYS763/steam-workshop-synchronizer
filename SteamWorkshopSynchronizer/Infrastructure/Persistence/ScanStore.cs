@@ -102,7 +102,8 @@ public sealed class ScanStore
         using var connection = database.OpenConnection();
         using var command = connection.CreateCommand();
         command.CommandText = """
-            SELECT app_id, name, install_path, is_installed
+            SELECT app_id, name, install_path, is_installed,
+                   (SELECT COUNT(*) FROM workshop_items wi WHERE wi.app_id = games.app_id)
             FROM games
             WHERE $installedOnly = 0 OR is_installed = 1
             ORDER BY is_installed DESC, name COLLATE NOCASE;
@@ -112,7 +113,7 @@ public sealed class ScanStore
         var games = new List<GameInfo>();
         while (reader.Read())
         {
-            games.Add(new(reader.GetInt32(0), reader.GetString(1), reader.IsDBNull(2) ? null : reader.GetString(2), reader.GetInt32(3) == 1));
+            games.Add(new(reader.GetInt32(0), reader.GetString(1), reader.IsDBNull(2) ? null : reader.GetString(2), reader.GetInt32(3) == 1, reader.GetInt32(4)));
         }
 
         return games;

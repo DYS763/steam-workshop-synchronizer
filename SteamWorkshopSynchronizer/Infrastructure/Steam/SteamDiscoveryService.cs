@@ -217,6 +217,7 @@ public sealed class SteamDiscoveryService
         var hasManifest = File.Exists(appWorkshopPath);
         var subscribed = new HashSet<string>(StringComparer.Ordinal);
         var installed = new HashSet<string>(StringComparer.Ordinal);
+        var hasSubscriptionData = false;
 
         if (hasManifest)
         {
@@ -224,7 +225,9 @@ public sealed class SteamDiscoveryService
             {
                 var root = parser.Parse(File.ReadAllText(appWorkshopPath));
                 var appWorkshop = root.GetObject("AppWorkshop") ?? root;
-                ReadWorkshopIds(appWorkshop.GetObject("WorkshopItemsSubscribed"), subscribed);
+                hasSubscriptionData = appWorkshop.TryGetValue("WorkshopItemsSubscribed", out var subscriptionNode)
+                    && subscriptionNode.Object is not null;
+                ReadWorkshopIds(subscriptionNode?.Object, subscribed);
                 ReadWorkshopIds(appWorkshop.GetObject("WorkshopItemsInstalled"), installed);
             }
             catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or FormatException)
@@ -255,7 +258,7 @@ public sealed class SteamDiscoveryService
                 $"https://steamcommunity.com/sharedfiles/filedetails/?id={id}",
                 isSubscribed,
                 isDownloaded ? WorkshopDownloadState.Downloaded : hasManifest ? WorkshopDownloadState.Pending : WorkshopDownloadState.Unknown,
-                hasManifest && !isSubscribed && isDownloaded,
+                hasSubscriptionData && !isSubscribed && isDownloaded,
                 Directory.Exists(localPath) ? localPath : null,
                 DateTimeOffset.UtcNow);
         }

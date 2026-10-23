@@ -63,7 +63,12 @@
                              Margin="0,0,0,8"
                              ToolTip="按游戏名称或 AppID 模糊搜索"
                              TextChanged="GameSearchBox_TextChanged" />
-                    <ListBox x:Name="GamesList" ItemsSource="{Binding Games}" SelectionChanged="GamesList_SelectionChanged" DisplayMemberPath="Name" />
+                    <CheckBox x:Name="OnlyGamesWithModsCheckBox"
+                              DockPanel.Dock="Top"
+                              Content="只显示有 Mod 的游戏"
+                              Margin="0,0,0,8"
+                              Click="OnlyGamesWithMods_Click" />
+                    <ListBox x:Name="GamesList" ItemsSource="{Binding Games}" SelectionChanged="GamesList_SelectionChanged" DisplayMemberPath="DisplayName" />
                 </DockPanel>
             </GroupBox>
 

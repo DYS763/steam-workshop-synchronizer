@@ -7,6 +7,7 @@ namespace SteamWorkshopSynchronizer.Infrastructure.Steam;
 
 public sealed class SteamDiscoveryService
 {
+    private const ulong SteamId64Base = 76561197960265728UL;
     private readonly SteamLocator locator;
     private readonly SteamVdfParser parser;
     private readonly SteamWorkshopMetadataService? metadata;
@@ -46,6 +47,7 @@ public sealed class SteamDiscoveryService
         }
 
         var currentAccount = ReadCurrentAccount(steamRoot, warnings);
+        var currentAccountId = GetAccountId(currentAccount?.SteamId64);
         var libraryPaths = ReadLibraryPaths(steamRoot, warnings);
         var libraries = libraryPaths.Select(path => CreateLibraryInfo(path, warnings)).ToArray();
         var games = new Dictionary<int, GameInfo>();
@@ -54,7 +56,7 @@ public sealed class SteamDiscoveryService
         foreach (var library in libraries.Where(library => library.IsReadable))
         {
             cancellationToken.ThrowIfCancellationRequested();
-            ScanLibrary(library.Path, games, workshopItems, warnings, cancellationToken);
+            ScanLibrary(library.Path, games, workshopItems, warnings, currentAccountId, cancellationToken);
         }
 
         var snapshot = new SteamScanSnapshot(
@@ -170,6 +172,7 @@ public sealed class SteamDiscoveryService
         IDictionary<int, GameInfo> games,
         IDictionary<(int AppId, string PublishedFileId), WorkshopItemSnapshot> workshopItems,
         ICollection<string> warnings,
+        string? currentAccountId,
         CancellationToken cancellationToken)
     {
         var steamAppsPath = Path.Combine(libraryPath, "steamapps");
@@ -197,7 +200,7 @@ public sealed class SteamDiscoveryService
                     : Path.Combine(steamAppsPath, "common", installDir);
                 var game = new GameInfo(appId, appState.GetString("name") ?? $"App {appId}", gamePath, true);
                 games[appId] = game;
-                ScanWorkshopItems(steamAppsPath, appId, workshopItems, warnings);
+                ScanWorkshopItems(steamAppsPath, appId, workshopItems, warnings, currentAccountId);
             }
             catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or FormatException)
             {
@@ -210,7 +213,8 @@ public sealed class SteamDiscoveryService
         string steamAppsPath,
         int appId,
         IDictionary<(int AppId, string PublishedFileId), WorkshopItemSnapshot> workshopItems,
-        ICollection<string> warnings)
+        ICollection<string> warnings,
+        string? currentAccountId)
     {
         var workshopPath = Path.Combine(steamAppsPath, "workshop");
         var appWorkshopPath = Path.Combine(workshopPath, $"appworkshop_{appId}.acf");
@@ -228,6 +232,11 @@ public sealed class SteamDiscoveryService
                 hasSubscriptionData = appWorkshop.TryGetValue("WorkshopItemsSubscribed", out var subscriptionNode)
                     && subscriptionNode.Object is not null;
                 ReadWorkshopIds(subscriptionNode?.Object, subscribed);
+                if (appWorkshop.GetObject("WorkshopItemDetails") is { } details && currentAccountId is not null)
+                {
+                    hasSubscriptionData = true;
+                    ReadSubscribedWorkshopIds(details, currentAccountId, subscribed);
+                }
                 ReadWorkshopIds(appWorkshop.GetObject("WorkshopItemsInstalled"), installed);
             }
             catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or FormatException)
@@ -278,5 +287,31 @@ public sealed class SteamDiscoveryService
                 destination.Add(key);
             }
         }
+    }
+
+    private static void ReadSubscribedWorkshopIds(SteamVdfObject details, string currentAccountId, ISet<string> destination)
+    {
+        foreach (var pair in details.Values)
+        {
+            if (!pair.Key.All(char.IsDigit) || pair.Value.Object is not { } itemDetails)
+            {
+                continue;
+            }
+
+            var subscribedBy = itemDetails.GetString("subscribedby");
+            if (subscribedBy?.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                .Any(accountId => string.Equals(accountId, currentAccountId, StringComparison.Ordinal)) == true)
+            {
+                destination.Add(pair.Key);
+            }
+        }
+    }
+
+    private static string? GetAccountId(string? steamId64)
+    {
+        return ulong.TryParse(steamId64, NumberStyles.None, CultureInfo.InvariantCulture, out var value)
+            && value >= SteamId64Base
+            ? (value - SteamId64Base).ToString(CultureInfo.InvariantCulture)
+            : null;
     }
 }

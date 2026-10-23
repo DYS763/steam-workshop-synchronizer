@@ -9,4 +9,6 @@ public static class AppDataPaths
         "SteamWorkshopSynchronizer");
 
     public static string DatabasePath => Path.Combine(RootDirectory, "data.db");
+
+    public static string LogDirectory => Path.Combine(RootDirectory, "logs");
 }

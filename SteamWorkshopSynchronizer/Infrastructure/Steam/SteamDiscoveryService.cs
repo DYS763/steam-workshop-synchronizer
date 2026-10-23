@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.IO;
 using SteamWorkshopSynchronizer.Core.Models;
+using SteamWorkshopSynchronizer.Infrastructure.Diagnostics;
 
 namespace SteamWorkshopSynchronizer.Infrastructure.Steam;
 
@@ -8,11 +9,13 @@ public sealed class SteamDiscoveryService
 {
     private readonly SteamLocator locator;
     private readonly SteamVdfParser parser;
+    private readonly AppLogger? logger;
 
-    public SteamDiscoveryService(SteamLocator? locator = null, SteamVdfParser? parser = null)
+    public SteamDiscoveryService(SteamLocator? locator = null, SteamVdfParser? parser = null, AppLogger? logger = null)
     {
         this.locator = locator ?? new SteamLocator();
         this.parser = parser ?? new SteamVdfParser();
+        this.logger = logger;
     }
 
     public Task<SteamScanSnapshot> ScanAsync(CancellationToken cancellationToken = default) =>
@@ -20,12 +23,14 @@ public sealed class SteamDiscoveryService
 
     public SteamScanSnapshot Scan(CancellationToken cancellationToken = default)
     {
+        logger?.Info("扫描", "开始扫描 Steam 安装目录、游戏和 Workshop");
         var warnings = new List<string>();
         var roots = locator.FindRoots();
         var steamRoot = roots.FirstOrDefault();
         if (steamRoot is null)
         {
             warnings.Add("未找到 Steam 安装目录");
+            logger?.Warning("扫描", "未找到 Steam 安装目录");
             return new(null, null, [], [], [], warnings, DateTimeOffset.UtcNow);
         }
 
@@ -41,7 +46,7 @@ public sealed class SteamDiscoveryService
             ScanLibrary(library.Path, games, workshopItems, warnings, cancellationToken);
         }
 
-        return new(
+        var snapshot = new SteamScanSnapshot(
             steamRoot,
             currentAccount,
             libraries,
@@ -49,6 +54,13 @@ public sealed class SteamDiscoveryService
             workshopItems.Values.OrderBy(item => item.AppId).ThenBy(item => item.Title ?? item.PublishedFileId, StringComparer.CurrentCultureIgnoreCase).ToArray(),
             warnings,
             DateTimeOffset.UtcNow);
+        logger?.Info("扫描", $"Steam 扫描完成：{snapshot.Games.Count} 个游戏，{snapshot.WorkshopItems.Count} 个 Workshop 项，{snapshot.Warnings.Count} 条提示");
+        foreach (var warning in snapshot.Warnings)
+        {
+            logger?.Warning("扫描", warning);
+        }
+
+        return snapshot;
     }
 
     private SteamAccountInfo? ReadCurrentAccount(string steamRoot, ICollection<string> warnings)

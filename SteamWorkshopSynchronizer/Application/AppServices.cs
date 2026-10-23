@@ -1,6 +1,7 @@
 using SteamWorkshopSynchronizer.Core.Comparison;
 using SteamWorkshopSynchronizer.Core.Serialization;
 using SteamWorkshopSynchronizer.Application.Operations;
+using SteamWorkshopSynchronizer.Infrastructure.Diagnostics;
 using SteamWorkshopSynchronizer.Infrastructure.Persistence;
 using SteamWorkshopSynchronizer.Infrastructure.Steam;
 
@@ -10,6 +11,8 @@ public sealed class AppServices
 {
     private AppServices(
         SqliteDatabase database,
+        AppSettingsStore settings,
+        AppLogger logger,
         ScanStore scans,
         PresetStore presets,
         OperationStore operations,
@@ -22,6 +25,8 @@ public sealed class AppServices
         WorkshopOperationQueue operationQueue)
     {
         Database = database;
+        Settings = settings;
+        Logger = logger;
         Scans = scans;
         Presets = presets;
         Operations = operations;
@@ -35,6 +40,8 @@ public sealed class AppServices
     }
 
     public SqliteDatabase Database { get; }
+    public AppSettingsStore Settings { get; }
+    public AppLogger Logger { get; }
     public ScanStore Scans { get; }
     public PresetStore Presets { get; }
     public OperationStore Operations { get; }
@@ -50,18 +57,23 @@ public sealed class AppServices
     {
         var database = new SqliteDatabase(AppDataPaths.DatabasePath);
         database.Initialize();
-        var steamOperator = new SteamProtocolOperator();
+        var settings = new AppSettingsStore(database);
+        var logger = new AppLogger(AppDataPaths.LogDirectory, settings.GetBool(AppSettingsStore.DeveloperModeKey));
+        logger.Info("启动", $"应用服务初始化开始，数据库：{database.DatabasePath}");
+        var steamOperator = new SteamProtocolOperator(logger);
         return new(
             database,
+            settings,
+            logger,
             new ScanStore(database),
             new PresetStore(database),
             new OperationStore(database),
             new BackupStore(database),
-            new SteamDiscoveryService(),
+            new SteamDiscoveryService(logger: logger),
             new ManifestSerializer(),
             new CompressedTextCodec(),
             new WorkshopDiffCalculator(),
             steamOperator,
-            new WorkshopOperationQueue(steamOperator));
+            new WorkshopOperationQueue(steamOperator, logger));
     }
 }

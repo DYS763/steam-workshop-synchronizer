@@ -30,6 +30,7 @@ public sealed class ManifestSerializer
     public ManifestParseResult Parse(string json, bool forceFutureVersion = false)
     {
         var issues = new List<ManifestIssue>();
+        var hasStructuralError = false;
         if (string.IsNullOrWhiteSpace(json))
         {
             return new(null, [new(ManifestIssueSeverity.Error, "清单内容为空")], false);
@@ -59,11 +60,13 @@ public sealed class ManifestSerializer
         if (!string.Equals(raw.Format, Format, StringComparison.Ordinal))
         {
             issues.Add(new(ManifestIssueSeverity.Error, $"不支持的清单格式：{raw.Format ?? "(空)"}"));
+            hasStructuralError = true;
         }
 
         if (raw.FormatVersion <= 0)
         {
             issues.Add(new(ManifestIssueSeverity.Error, "清单格式版本必须为正整数"));
+            hasStructuralError = true;
         }
         else if (isFutureVersion)
         {
@@ -74,16 +77,19 @@ public sealed class ManifestSerializer
         if (raw.Game is null || raw.Game.AppId <= 0)
         {
             issues.Add(new(ManifestIssueSeverity.Error, "清单缺少有效的游戏 AppID"));
+            hasStructuralError = true;
         }
 
         if (raw.Preset is null || string.IsNullOrWhiteSpace(raw.Preset.Name))
         {
             issues.Add(new(ManifestIssueSeverity.Error, "清单缺少预设名称"));
+            hasStructuralError = true;
         }
 
         if (raw.Items is null)
         {
             issues.Add(new(ManifestIssueSeverity.Error, "清单缺少 Mod 列表"));
+            hasStructuralError = true;
             return new(null, issues, isFutureVersion);
         }
 
@@ -127,7 +133,7 @@ public sealed class ManifestSerializer
             });
         }
 
-        if (issues.Any(issue => issue.Severity == ManifestIssueSeverity.Error) && !forceFutureVersion)
+        if (hasStructuralError || (isFutureVersion && !forceFutureVersion && raw.FormatVersion <= 0))
         {
             return new(null, issues, isFutureVersion);
         }

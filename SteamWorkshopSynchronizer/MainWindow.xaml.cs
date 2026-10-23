@@ -252,9 +252,19 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         });
         try
         {
+            var batchId = services.Operations.CreateBatch(
+                "sync",
+                requests,
+                selectedPreset?.Id,
+                selectedPreset?.CurrentVersionId);
             var results = await services.OperationQueue.RunAsync(requests, progress);
+            foreach (var result in results)
+            {
+                services.Operations.RecordResult(batchId, result);
+            }
             var failed = results.Count(result => result.State == WorkshopOperationResultState.Failed);
             var submitted = results.Count(result => result.State == WorkshopOperationResultState.Submitted);
+            services.Operations.FinishBatch(batchId, failed == results.Count ? "failed" : failed > 0 ? "partial" : "completed");
             StatusText = $"已提交 {submitted} 项，失败 {failed} 项；请等待 Steam 完成后重新扫描。";
             if (failed > 0)
             {
@@ -489,7 +499,52 @@ public partial class MainWindow : Window, INotifyPropertyChanged
 
     private void RecycleBin_Click(object sender, RoutedEventArgs e)
     {
-        MessageBox.Show("回收站数据层将在同步历史模块完成后开放。当前取消订阅请求仍会通过队列提交。", "回收站", MessageBoxButton.OK, MessageBoxImage.Information);
+        var items = services.Operations.GetRecycleBin(selectedGame?.AppId);
+        var message = items.Count == 0
+            ? "回收站为空。"
+            : string.Join(Environment.NewLine, items.Select(item => $"{item.Title ?? item.PublishedFileId} [{item.PublishedFileId}]"));
+        var result = MessageBox.Show(
+            $"{message}\n\n确定重新订阅回收站中的全部项目吗？",
+            "回收站",
+            items.Count == 0 ? MessageBoxButton.OK : MessageBoxButton.YesNo,
+            MessageBoxImage.Information);
+        if (items.Count == 0 || result != MessageBoxResult.Yes)
+        {
+            return;
+        }
+
+        var requests = items.Select(item => new WorkshopOperationRequest(item.AppId, item.PublishedFileId, WorkshopOperationAction.Subscribe, item.Title, item.WorkshopUrl)).ToArray();
+        _ = RestoreRecycleBinAsync(items, requests);
+    }
+
+    private async Task RestoreRecycleBinAsync(IReadOnlyList<RecycleBinItem> items, IReadOnlyList<WorkshopOperationRequest> requests)
+    {
+        var batchId = services.Operations.CreateBatch("restore", requests);
+        var results = await services.OperationQueue.RunAsync(requests);
+        for (var index = 0; index < results.Count; index++)
+        {
+            services.Operations.RecordResult(batchId, results[index]);
+            if (results[index].State == WorkshopOperationResultState.Submitted)
+            {
+                services.Operations.MarkRecycleBinRestored(items[index].Id);
+            }
+            else if (results[index].State == WorkshopOperationResultState.Failed)
+            {
+                services.Operations.MarkRecycleBinFailed(items[index].Id, results[index].ErrorMessage ?? "Steam 请求失败");
+            }
+        }
+
+        services.Operations.FinishBatch(batchId, results.Any(result => result.State == WorkshopOperationResultState.Failed) ? "partial" : "completed");
+        StatusText = $"已提交 {results.Count(result => result.State == WorkshopOperationResultState.Submitted)} 个回收站恢复请求，请重新扫描确认。";
+    }
+
+    private void History_Click(object sender, RoutedEventArgs e)
+    {
+        var history = services.Operations.GetHistory(30);
+        var message = history.Count == 0
+            ? "暂无操作历史。"
+            : string.Join(Environment.NewLine, history.Select(item => $"{item.CreatedAt.LocalDateTime:g}  {item.Kind}  {item.Status}  {item.CompletedItems}/{item.TotalItems}"));
+        MessageBox.Show(message, "操作历史", MessageBoxButton.OK, MessageBoxImage.Information);
     }
 
     private static string SanitizeFileName(string fileName)

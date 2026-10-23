@@ -61,6 +61,7 @@
                     <StackPanel DockPanel.Dock="Bottom" Margin="0,8,0,0">
                         <Button Content="导出当前订阅" Click="ExportCurrent_Click" />
                         <Button Content="打开回收站" Click="RecycleBin_Click" />
+                        <Button Content="操作历史" Click="History_Click" />
                     </StackPanel>
                     <ListBox x:Name="PresetsList" ItemsSource="{Binding Presets}" SelectionChanged="PresetsList_SelectionChanged" DisplayMemberPath="Name" />
                 </DockPanel>

@@ -12,6 +12,7 @@ public sealed class AppServices
         SqliteDatabase database,
         ScanStore scans,
         PresetStore presets,
+        OperationStore operations,
         SteamDiscoveryService discovery,
         ManifestSerializer manifests,
         CompressedTextCodec compressedText,
@@ -22,6 +23,7 @@ public sealed class AppServices
         Database = database;
         Scans = scans;
         Presets = presets;
+        Operations = operations;
         Discovery = discovery;
         Manifests = manifests;
         CompressedText = compressedText;
@@ -33,6 +35,7 @@ public sealed class AppServices
     public SqliteDatabase Database { get; }
     public ScanStore Scans { get; }
     public PresetStore Presets { get; }
+    public OperationStore Operations { get; }
     public SteamDiscoveryService Discovery { get; }
     public ManifestSerializer Manifests { get; }
     public CompressedTextCodec CompressedText { get; }
@@ -49,6 +52,7 @@ public sealed class AppServices
             database,
             new ScanStore(database),
             new PresetStore(database),
+            new OperationStore(database),
             new SteamDiscoveryService(),
             new ManifestSerializer(),
             new CompressedTextCodec(),

@@ -395,10 +395,30 @@ public partial class MainWindow : Window, INotifyPropertyChanged
             .Split(["\r\n", "\n"], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
             .Select(line => line.Trim())
             .Where(line => line.Length > 0)
-            .Select(line => new ManifestItem(line, null, $"https://steamcommunity.com/sharedfiles/filedetails/?id={line}", false, "text"))
             .ToArray();
-        var manifest = services.Manifests.Create(selectedGame, "剪贴板导入", null, items, "import");
-        return new(manifest, [], false);
+        var issues = new List<ManifestIssue>();
+        var validItems = new List<ManifestItem>();
+        var seen = new HashSet<string>(StringComparer.Ordinal);
+        for (var index = 0; index < items.Length; index++)
+        {
+            var line = items[index];
+            if (line.Length is < 1 or > 20 || line.Any(character => !char.IsDigit(character)))
+            {
+                issues.Add(new(ManifestIssueSeverity.Error, "Workshop ID 必须是 1 到 20 位数字", index));
+                continue;
+            }
+
+            if (!seen.Add(line))
+            {
+                issues.Add(new(ManifestIssueSeverity.Warning, $"重复的 Workshop ID 已跳过：{line}", index));
+                continue;
+            }
+
+            validItems.Add(new ManifestItem(line, null, $"https://steamcommunity.com/sharedfiles/filedetails/?id={line}", false, "text"));
+        }
+
+        var manifest = services.Manifests.Create(selectedGame, "剪贴板导入", null, validItems, "import");
+        return new(manifest, issues, false);
     }
 
     private void EnsureGameExists(ManifestGame game)

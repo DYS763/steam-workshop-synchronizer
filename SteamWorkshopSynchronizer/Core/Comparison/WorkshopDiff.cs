@@ -85,7 +85,7 @@ public sealed class WorkshopDiffCalculator
                 localItem.WorkshopUrl,
                 kind,
                 false,
-                kind == WorkshopDiffKind.Extra,
+                false,
                 localItem,
                 null));
         }

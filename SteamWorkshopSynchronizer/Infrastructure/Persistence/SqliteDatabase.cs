@@ -28,9 +28,14 @@ public sealed class SqliteDatabase
         }
 
         using var connection = OpenConnection();
+        // journal_mode changes the database connection state and cannot run inside a transaction.
+        using (var pragma = connection.CreateCommand())
+        {
+            pragma.CommandText = "PRAGMA journal_mode = WAL;";
+            pragma.ExecuteNonQuery();
+        }
+
         using var transaction = connection.BeginTransaction();
-        ExecuteNonQuery(transaction, "PRAGMA foreign_keys = ON;");
-        ExecuteNonQuery(transaction, "PRAGMA journal_mode = WAL;");
         ExecuteNonQuery(transaction, "CREATE TABLE IF NOT EXISTS schema_info (version INTEGER NOT NULL);");
 
         var currentVersion = ExecuteScalar<long>(transaction, "SELECT COALESCE(MAX(version), 0) FROM schema_info;");

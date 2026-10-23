@@ -463,6 +463,79 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         }
     }
 
+    private void Backup_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            var dialog = new SaveFileDialog
+            {
+                Filter = "Steam Workshop Synchronizer 备份|*.swsb.txt;*.txt|所有文件|*.*",
+                FileName = $"sws-backup-{DateTime.Now:yyyyMMdd-HHmmss}.swsb.txt",
+                Title = "备份工具数据"
+            };
+            if (dialog.ShowDialog(this) != true)
+            {
+                return;
+            }
+
+            var backup = services.Backups.ExportCompressed("0.1.0");
+            File.WriteAllText(dialog.FileName, backup, new UTF8Encoding(false));
+            StatusText = $"已备份工具数据：{dialog.FileName}";
+            MessageBox.Show(
+                "备份包含：游戏绑定和库路径、全部预设及版本、回收站、操作历史和工具设置。\n\n不包含：Steam 登录信息、Workshop 文件本体和临时执行队列。",
+                "备份完成",
+                MessageBoxButton.OK,
+                MessageBoxImage.Information);
+        }
+        catch (Exception exception)
+        {
+            MessageBox.Show($"备份失败：{exception.Message}", "备份失败", MessageBoxButton.OK, MessageBoxImage.Warning);
+        }
+    }
+
+    private void Restore_Click(object sender, RoutedEventArgs e)
+    {
+        var dialog = new OpenFileDialog
+        {
+            Filter = "Steam Workshop Synchronizer 备份|*.swsb.txt;*.txt|所有文件|*.*",
+            Title = "恢复工具数据"
+        };
+        if (dialog.ShowDialog(this) != true)
+        {
+            return;
+        }
+
+        var modeChoice = MessageBox.Show(
+            "选择恢复方式：\n\n是：增量恢复，追加并保留当前数据\n否：覆盖恢复，替换工具管理的数据\n取消：放弃恢复",
+            "选择恢复方式",
+            MessageBoxButton.YesNoCancel,
+            MessageBoxImage.Question);
+        if (modeChoice == MessageBoxResult.Cancel)
+        {
+            return;
+        }
+
+        try
+        {
+            Directory.CreateDirectory(AppDataPaths.RootDirectory);
+            var safetyPath = Path.Combine(AppDataPaths.RootDirectory, $"pre-restore-{DateTime.Now:yyyyMMdd-HHmmss}.swsb.txt");
+            File.WriteAllText(safetyPath, services.Backups.ExportCompressed("0.1.0"), new UTF8Encoding(false));
+            var mode = modeChoice == MessageBoxResult.Yes ? BackupRestoreMode.Incremental : BackupRestoreMode.Overwrite;
+            var result = services.Backups.RestoreCompressed(File.ReadAllText(dialog.FileName), mode, safetyPath);
+            StatusText = $"恢复完成：导入 {result.ImportedRows} 行，跳过 {result.SkippedRows} 行；请重新扫描 Steam。";
+            MessageBox.Show(
+                $"恢复完成。\n\n导入：{result.ImportedRows} 行\n跳过：{result.SkippedRows} 行\n恢复前快照：{result.SafetySnapshotPath}\n\nSteam 当前订阅没有被改变，请重新扫描后自行选择同步。",
+                "恢复完成",
+                MessageBoxButton.OK,
+                MessageBoxImage.Information);
+            LoadGames(selectedGame?.AppId);
+        }
+        catch (Exception exception)
+        {
+            MessageBox.Show($"恢复失败：{exception.Message}", "恢复失败", MessageBoxButton.OK, MessageBoxImage.Warning);
+        }
+    }
+
     private ManifestDocument? BuildManifest(bool usePreset)
     {
         if (selectedGame is null)
@@ -545,6 +618,56 @@ public partial class MainWindow : Window, INotifyPropertyChanged
             ? "暂无操作历史。"
             : string.Join(Environment.NewLine, history.Select(item => $"{item.CreatedAt.LocalDateTime:g}  {item.Kind}  {item.Status}  {item.CompletedItems}/{item.TotalItems}"));
         MessageBox.Show(message, "操作历史", MessageBoxButton.OK, MessageBoxImage.Information);
+    }
+
+    private void UndoLatest_Click(object sender, RoutedEventArgs e)
+    {
+        var latest = services.Operations.GetHistory(1).FirstOrDefault();
+        if (latest is null)
+        {
+            MessageBox.Show("暂无可撤回的操作批次。", "撤回", MessageBoxButton.OK, MessageBoxImage.Information);
+            return;
+        }
+
+        var requests = services.Operations.GetUndoRequests(latest.Id);
+        if (requests.Count == 0)
+        {
+            MessageBox.Show("最近批次没有已成功提交的项目，无法撤回。", "撤回", MessageBoxButton.OK, MessageBoxImage.Information);
+            return;
+        }
+
+        var confirmation = MessageBox.Show(
+            $"最近批次包含 {requests.Count} 个已提交项目。撤回会创建新的反向操作批次。\n\n请先重新扫描确认当前 Steam 状态，再继续。是否提交？",
+            "撤回最近批次",
+            MessageBoxButton.YesNo,
+            MessageBoxImage.Warning);
+        if (confirmation != MessageBoxResult.Yes)
+        {
+            return;
+        }
+
+        _ = UndoBatchAsync(latest.Id, requests);
+    }
+
+    private async Task UndoBatchAsync(string parentBatchId, IReadOnlyList<WorkshopOperationRequest> requests)
+    {
+        try
+        {
+            var batchId = services.Operations.CreateBatch("undo", requests, parentBatchId: parentBatchId);
+            var results = await services.OperationQueue.RunAsync(requests);
+            foreach (var result in results)
+            {
+                services.Operations.RecordResult(batchId, result);
+            }
+
+            var failed = results.Count(result => result.State == WorkshopOperationResultState.Failed);
+            services.Operations.FinishBatch(batchId, failed == results.Count ? "failed" : failed > 0 ? "partial" : "completed");
+            StatusText = $"已提交 {results.Count(result => result.State == WorkshopOperationResultState.Submitted)} 个撤回请求，请重新扫描确认。";
+        }
+        catch (Exception exception)
+        {
+            MessageBox.Show($"撤回失败：{exception.Message}", "撤回失败", MessageBoxButton.OK, MessageBoxImage.Warning);
+        }
     }
 
     private static string SanitizeFileName(string fileName)

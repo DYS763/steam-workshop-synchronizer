@@ -136,6 +136,40 @@ public sealed class OperationStore
         return history;
     }
 
+    public IReadOnlyList<WorkshopOperationRequest> GetUndoRequests(string batchId)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(batchId);
+        using var connection = database.OpenConnection();
+        using var command = connection.CreateCommand();
+        command.CommandText = """
+            SELECT oi.app_id, oi.published_file_id, oi.action,
+                   wi.title_snapshot, wi.workshop_url
+            FROM operation_items oi
+            LEFT JOIN workshop_items wi
+              ON wi.app_id = oi.app_id AND wi.published_file_id = oi.published_file_id
+            WHERE oi.batch_id = $batchId AND oi.result = 'submitted'
+            ORDER BY oi.created_at;
+            """;
+        command.Parameters.AddWithValue("$batchId", batchId);
+        using var reader = command.ExecuteReader();
+        var requests = new List<WorkshopOperationRequest>();
+        while (reader.Read())
+        {
+            var originalAction = reader.GetString(2);
+            var inverse = string.Equals(originalAction, "subscribe", StringComparison.OrdinalIgnoreCase)
+                ? WorkshopOperationAction.Unsubscribe
+                : WorkshopOperationAction.Subscribe;
+            requests.Add(new(
+                reader.GetInt32(0),
+                reader.GetString(1),
+                inverse,
+                reader.IsDBNull(3) ? null : reader.GetString(3),
+                reader.IsDBNull(4) ? null : reader.GetString(4)));
+        }
+
+        return requests;
+    }
+
     public IReadOnlyList<RecycleBinItem> GetRecycleBin(int? appId = null)
     {
         using var connection = database.OpenConnection();

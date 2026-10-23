@@ -34,6 +34,8 @@
                     <Button Content="粘贴导入" Click="PasteImport_Click" />
                     <Button Content="导出 JSON" Click="ExportJson_Click" />
                     <Button Content="复制压缩文本" Click="CopyCompressed_Click" />
+                    <Button Content="备份数据" Click="Backup_Click" />
+                    <Button Content="恢复数据" Click="Restore_Click" />
                 </StackPanel>
                 <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
                     <TextBlock Text="状态：" FontWeight="SemiBold" />
@@ -62,6 +64,7 @@
                         <Button Content="导出当前订阅" Click="ExportCurrent_Click" />
                         <Button Content="打开回收站" Click="RecycleBin_Click" />
                         <Button Content="操作历史" Click="History_Click" />
+                        <Button Content="撤回最近批次" Click="UndoLatest_Click" />
                     </StackPanel>
                     <ListBox x:Name="PresetsList" ItemsSource="{Binding Presets}" SelectionChanged="PresetsList_SelectionChanged" DisplayMemberPath="Name" />
                 </DockPanel>

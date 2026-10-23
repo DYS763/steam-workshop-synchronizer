@@ -13,6 +13,7 @@ public sealed class AppServices
         ScanStore scans,
         PresetStore presets,
         OperationStore operations,
+        BackupStore backups,
         SteamDiscoveryService discovery,
         ManifestSerializer manifests,
         CompressedTextCodec compressedText,
@@ -24,6 +25,7 @@ public sealed class AppServices
         Scans = scans;
         Presets = presets;
         Operations = operations;
+        Backups = backups;
         Discovery = discovery;
         Manifests = manifests;
         CompressedText = compressedText;
@@ -36,6 +38,7 @@ public sealed class AppServices
     public ScanStore Scans { get; }
     public PresetStore Presets { get; }
     public OperationStore Operations { get; }
+    public BackupStore Backups { get; }
     public SteamDiscoveryService Discovery { get; }
     public ManifestSerializer Manifests { get; }
     public CompressedTextCodec CompressedText { get; }
@@ -53,6 +56,7 @@ public sealed class AppServices
             new ScanStore(database),
             new PresetStore(database),
             new OperationStore(database),
+            new BackupStore(database),
             new SteamDiscoveryService(),
             new ManifestSerializer(),
             new CompressedTextCodec(),

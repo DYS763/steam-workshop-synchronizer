@@ -33,7 +33,7 @@ public sealed class SteamVdfParser
         return ParseObject(tokenizer, expectOpeningBrace: false);
     }
 
-    private static SteamVdfObject ParseObject(Tokenizer tokenizer, bool expectOpeningBrace)
+    private static SteamVdfObject ParseObject(Tokenizer tokenizer, bool expectOpeningBrace, bool requireClosingBrace = false)
     {
         if (expectOpeningBrace && tokenizer.Read() != Token.OpenBrace)
         {
@@ -46,7 +46,7 @@ public sealed class SteamVdfParser
             var key = tokenizer.Read();
             if (key == Token.End)
             {
-                if (expectOpeningBrace)
+                if (expectOpeningBrace || requireClosingBrace)
                 {
                     throw new FormatException("VDF 对象缺少结束大括号");
                 }
@@ -56,7 +56,7 @@ public sealed class SteamVdfParser
 
             if (key == Token.CloseBrace)
             {
-                if (!expectOpeningBrace)
+                if (!expectOpeningBrace && !requireClosingBrace)
                 {
                     throw new FormatException("VDF 出现意外的结束大括号");
                 }
@@ -72,7 +72,9 @@ public sealed class SteamVdfParser
             var value = tokenizer.Read();
             if (value == Token.OpenBrace)
             {
-                result.Set(key.Value!, SteamVdfValue.FromObject(ParseObject(tokenizer, expectOpeningBrace: true)));
+                // The opening brace has already been consumed as the value token.
+                // The nested parser only needs to consume and validate its closing brace.
+                result.Set(key.Value!, SteamVdfValue.FromObject(ParseObject(tokenizer, expectOpeningBrace: false, requireClosingBrace: true)));
                 continue;
             }
 

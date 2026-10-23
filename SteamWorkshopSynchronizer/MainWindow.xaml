@@ -113,7 +113,8 @@
                               HeadersVisibility="Column"
                               GridLinesVisibility="Horizontal"
                               SelectionMode="Extended"
-                              CurrentCellChanged="DiffGrid_CurrentCellChanged">
+                               CurrentCellChanged="DiffGrid_CurrentCellChanged"
+                               ContextMenuOpening="DiffGrid_ContextMenuOpening">
                         <DataGrid.Columns>
                             <DataGridCheckBoxColumn Header="选择" Width="52" Binding="{Binding IsSelected, UpdateSourceTrigger=PropertyChanged}" />
                             <DataGridTextColumn Header="状态" Width="120" Binding="{Binding StatusText}" IsReadOnly="True" />

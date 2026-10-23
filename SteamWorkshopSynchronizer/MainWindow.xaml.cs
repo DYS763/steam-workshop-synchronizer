@@ -329,6 +329,37 @@ public partial class MainWindow : Window, INotifyPropertyChanged
 
     private void DiffGrid_CurrentCellChanged(object? sender, EventArgs e) => UpdateSelectionSummary();
 
+    private void DiffGrid_ContextMenuOpening(object sender, ContextMenuEventArgs e)
+    {
+        if (e.OriginalSource is not DataGridRow row || row.Item is not DiffRow)
+        {
+            e.Handled = true;
+            return;
+        }
+
+        var menu = new ContextMenu();
+        var copyItem = new MenuItem { Header = "复制 Workshop 地址" };
+        copyItem.Click += CopyWorkshopUrl_Click;
+        menu.Items.Add(copyItem);
+        row.ContextMenu = menu;
+    }
+
+    private void CopyWorkshopUrl_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is not MenuItem menuItem
+            || menuItem.Parent is not ContextMenu menu
+            || menu.PlacementTarget is not DataGridRow row
+            || row.Item is not DiffRow item)
+        {
+            return;
+        }
+
+        var url = item.WorkshopUrl
+            ?? $"https://steamcommunity.com/sharedfiles/filedetails/?id={item.PublishedFileId}";
+        Clipboard.SetText(url);
+        StatusText = "Workshop 地址已复制";
+    }
+
     private async void SyncSelected_Click(object sender, RoutedEventArgs e)
     {
         DiffGrid.CommitEdit(DataGridEditingUnit.Cell, true);

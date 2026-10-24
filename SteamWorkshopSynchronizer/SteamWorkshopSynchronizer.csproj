@@ -12,6 +12,7 @@
     <AssemblyVersion>0.1.0.0</AssemblyVersion>
     <FileVersion>0.1.0.0</FileVersion>
     <BuildTimeUtc>$([System.DateTime]::UtcNow.ToString('O'))</BuildTimeUtc>
+    <ApplicationIcon>Resources\SWS.ico</ApplicationIcon>
     <PublishSingleFile>true</PublishSingleFile>
     <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
   </PropertyGroup>
@@ -23,6 +24,8 @@
 
   <ItemGroup>
     <AssemblyMetadata Include="BuildTimeUtc" Value="$(BuildTimeUtc)" />
+    <Resource Include="Resources\DYS.jpg" />
+    <Resource Include="Resources\SWS.ico" />
     <PackageReference Include="Microsoft.Data.Sqlite" Version="8.0.16" />
   </ItemGroup>
 

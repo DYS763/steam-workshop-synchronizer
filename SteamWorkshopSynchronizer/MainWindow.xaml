@@ -4,7 +4,8 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d"
-        Title="Steam Workshop Synchronizer"
+        Title="SWS工坊同步器"
+        Icon="pack://application:,,,/SteamWorkshopSynchronizer;component/Resources/SWS.ico"
         MinWidth="1100"
         MinHeight="680"
         Width="1280"
@@ -260,7 +261,7 @@
                         <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
                     <StackPanel>
-                        <TextBlock Text="WORKSHOP SYNC" FontSize="20" FontWeight="Bold" Foreground="{StaticResource PrimaryBrush}" />
+                        <TextBlock Text="SWS" FontSize="20" FontWeight="Bold" Foreground="{StaticResource PrimaryBrush}" />
                         <TextBlock Text="Steam Mod 清单同步工具" Margin="0,4,0,0" Foreground="{StaticResource TextMutedBrush}" />
                     </StackPanel>
                     <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
@@ -313,7 +314,6 @@
                 <GroupBox Grid.Column="1" Header="预设">
                     <DockPanel>
                         <WrapPanel DockPanel.Dock="Bottom" Margin="0,10,0,0">
-                            <Button Content="新建" Click="CreatePreset_Click" ToolTip="为当前游戏创建一个 Mod 预设" />
                             <Button Content="编辑" Click="EditPreset_Click" ToolTip="编辑当前预设并保存为新版本" />
                             <Button Content="版本" Click="PresetVersions_Click" Margin="0" ToolTip="查看、回滚或导出预设历史版本" />
                             <Button Content="回收站" Click="RecycleBin_Click" ToolTip="查看被工具取消订阅的 Mod 并重新订阅" />
@@ -346,6 +346,7 @@
                             </Grid.ColumnDefinitions>
                             <WrapPanel>
                                 <Button Content="全选" Click="SelectAll_Click" ToolTip="选择当前列表中的全部 Mod 项目" />
+                                <Button Content="新建" Click="CreatePreset_Click" ToolTip="为当前游戏创建一个 Mod 预设" />
                                 <Button Content="同步所选" Click="SyncSelected_Click" ToolTip="提交选中的订阅或取消订阅请求" />
                                 <Button Content="切换忽略" Click="ToggleIgnore_Click" ToolTip="切换选中清单项的忽略状态并保存新版本" />
                                 <Button Content="暂停" Click="PauseQueue_Click" ToolTip="暂停后续 Steam 请求" />
@@ -355,26 +356,37 @@
                             <TextBlock Grid.Column="1" VerticalAlignment="Center" Text="{Binding SelectionSummary, Mode=OneWay}" Foreground="{StaticResource TextSubtleBrush}" />
                         </Grid>
                         <TextBlock DockPanel.Dock="Top" Margin="0,0,0,8" Text="先勾选需要执行的项目，再同步。Steam 处理后请重新扫描确认。" TextWrapping="Wrap" Foreground="{StaticResource TextMutedBrush}" />
-                        <DataGrid x:Name="DiffGrid" ItemsSource="{Binding DiffRows}" AutoGenerateColumns="False" CanUserAddRows="False" CanUserDeleteRows="False" IsReadOnly="False" HeadersVisibility="Column" GridLinesVisibility="Horizontal" SelectionMode="Extended" CurrentCellChanged="DiffGrid_CurrentCellChanged" ContextMenuOpening="DiffGrid_ContextMenuOpening">
-                            <DataGrid.Columns>
-                                <DataGridTemplateColumn Header="选择" Width="52">
-                                    <DataGridTemplateColumn.CellTemplate>
-                                        <DataTemplate>
-                                            <CheckBox IsChecked="{Binding IsSelected, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                                      ClickMode="Press"
-                                                      Focusable="False"
-                                                      HorizontalAlignment="Center"
-                                                      VerticalAlignment="Center"
-                                                      ToolTip="点击选择或取消选择此项目" />
-                                        </DataTemplate>
-                                    </DataGridTemplateColumn.CellTemplate>
-                                </DataGridTemplateColumn>
-                                <DataGridTextColumn Header="状态" Width="130" Binding="{Binding StatusText, Mode=OneWay}" IsReadOnly="True" />
-                                <DataGridTextColumn Header="动作" Width="100" Binding="{Binding ActionText, Mode=OneWay}" IsReadOnly="True" />
-                                <DataGridTextColumn Header="Mod" Width="*" Binding="{Binding DisplayTitle, Mode=OneWay}" IsReadOnly="True" />
-                                <DataGridTextColumn Header="Workshop ID" Width="125" Binding="{Binding PublishedFileId, Mode=OneWay}" IsReadOnly="True" />
-                            </DataGrid.Columns>
-                        </DataGrid>
+                        <Grid>
+                            <Image Source="pack://application:,,,/SteamWorkshopSynchronizer;component/Resources/DYS.jpg"
+                                   Width="190"
+                                   Height="190"
+                                   Margin="10"
+                                   Opacity="0.22"
+                                   Stretch="Uniform"
+                                   HorizontalAlignment="Right"
+                                   VerticalAlignment="Bottom"
+                                   IsHitTestVisible="False" />
+                            <DataGrid x:Name="DiffGrid" ItemsSource="{Binding DiffRows}" AutoGenerateColumns="False" CanUserAddRows="False" CanUserDeleteRows="False" IsReadOnly="False" HeadersVisibility="Column" GridLinesVisibility="Horizontal" SelectionMode="Extended" CurrentCellChanged="DiffGrid_CurrentCellChanged" ContextMenuOpening="DiffGrid_ContextMenuOpening" Background="Transparent" RowBackground="#38FFFFFF" AlternatingRowBackground="#22FFFFFF">
+                                <DataGrid.Columns>
+                                    <DataGridTemplateColumn Header="选择" Width="52">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <CheckBox IsChecked="{Binding IsSelected, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                          ClickMode="Press"
+                                                          Focusable="False"
+                                                          HorizontalAlignment="Center"
+                                                          VerticalAlignment="Center"
+                                                          ToolTip="点击选择或取消选择此项目" />
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                    <DataGridTextColumn Header="状态" Width="130" Binding="{Binding StatusText, Mode=OneWay}" IsReadOnly="True" />
+                                    <DataGridTextColumn Header="动作" Width="100" Binding="{Binding ActionText, Mode=OneWay}" IsReadOnly="True" />
+                                    <DataGridTextColumn Header="Mod" Width="*" Binding="{Binding DisplayTitle, Mode=OneWay}" IsReadOnly="True" />
+                                    <DataGridTextColumn Header="Workshop ID" Width="125" Binding="{Binding PublishedFileId, Mode=OneWay}" IsReadOnly="True" />
+                                </DataGrid.Columns>
+                            </DataGrid>
+                        </Grid>
                     </DockPanel>
                 </GroupBox>
             </Grid>

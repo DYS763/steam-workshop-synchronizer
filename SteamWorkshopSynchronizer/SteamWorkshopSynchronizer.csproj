@@ -24,7 +24,7 @@
 
   <ItemGroup>
     <AssemblyMetadata Include="BuildTimeUtc" Value="$(BuildTimeUtc)" />
-    <Resource Include="Resources\DYS.jpg" />
+    <Resource Include="Resources\DYS.png" />
     <Resource Include="Resources\SWS.ico" />
     <PackageReference Include="Microsoft.Data.Sqlite" Version="8.0.16" />
   </ItemGroup>

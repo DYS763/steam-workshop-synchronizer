@@ -357,7 +357,7 @@
                         </Grid>
                         <TextBlock DockPanel.Dock="Top" Margin="0,0,0,8" Text="先勾选需要执行的项目，再同步。Steam 处理后请重新扫描确认。" TextWrapping="Wrap" Foreground="{StaticResource TextMutedBrush}" />
                         <Grid>
-                            <Image Source="pack://application:,,,/SteamWorkshopSynchronizer;component/Resources/DYS.jpg"
+                            <Image Source="pack://application:,,,/SteamWorkshopSynchronizer;component/Resources/DYS.png"
                                    Width="190"
                                    Height="190"
                                    Margin="10"

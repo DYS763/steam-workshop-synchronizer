@@ -733,7 +733,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
                 return;
             }
 
-            var backup = services.Backups.ExportCompressed("0.1.0");
+            var backup = services.Backups.ExportCompressed("0.2.0");
             File.WriteAllText(dialog.FileName, backup, new UTF8Encoding(false));
             StatusText = $"已备份工具数据：{dialog.FileName}";
             services.Logger.Info("备份", StatusText);
@@ -777,7 +777,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
             services.Logger.Info("恢复", $"用户开始恢复工具数据，文件：{dialog.FileName}，模式：{modeChoice}");
             Directory.CreateDirectory(AppDataPaths.RootDirectory);
             var safetyPath = Path.Combine(AppDataPaths.RootDirectory, $"pre-restore-{DateTime.Now:yyyyMMdd-HHmmss}.swsb.txt");
-            File.WriteAllText(safetyPath, services.Backups.ExportCompressed("0.1.0"), new UTF8Encoding(false));
+            File.WriteAllText(safetyPath, services.Backups.ExportCompressed("0.2.0"), new UTF8Encoding(false));
             var mode = modeChoice == MessageBoxResult.Yes ? BackupRestoreMode.Incremental : BackupRestoreMode.Overwrite;
             var result = services.Backups.RestoreCompressed(File.ReadAllText(dialog.FileName), mode, safetyPath);
             StatusText = $"恢复完成：导入 {result.ImportedRows} 行，跳过 {result.SkippedRows} 行；请重新扫描 Steam。";

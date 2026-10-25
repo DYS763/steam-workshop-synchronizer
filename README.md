@@ -52,7 +52,7 @@ Workshop 名称优先从本地 Mod 元数据读取；读取不到时尝试请求
 
 ## 构建
 
-需要 .NET 8 SDK 和 Windows Desktop Runtime：
+需要 .NET 8 SDK；运行发布包需要安装 `.NET 8 Windows Desktop Runtime (x64)`。框架依赖发布包不再捆绑 .NET 和 WPF 运行时，因此体积更小。
 
 ```powershell
 dotnet restore SteamWorkshopSynchronizer.sln
@@ -60,13 +60,14 @@ dotnet build SteamWorkshopSynchronizer.sln --configuration Release
 dotnet publish SteamWorkshopSynchronizer/SteamWorkshopSynchronizer.csproj `
   --configuration Release `
   --runtime win-x64 `
-  --self-contained true `
+  --self-contained false `
   --output publish `
   -p:PublishSingleFile=true `
+  -p:EnableCompressionInSingleFile=false `
   -p:IncludeNativeLibrariesForSelfExtract=true
 ```
 
-GitHub Actions 会在 `main` 的推送和 Pull Request 上构建；推送 `v*` 标签时构建 `win-x64` 自包含压缩包并创建 GitHub Release。发布输出目录 `publish/` 已被 Git 忽略。
+GitHub Actions 会在 `main` 的推送和 Pull Request 上构建；推送 `v*` 标签时构建 `win-x64` 框架依赖发布包并创建 GitHub Release。发布输出目录 `publish/` 已被 Git 忽略。
 
 ## 许可证
 

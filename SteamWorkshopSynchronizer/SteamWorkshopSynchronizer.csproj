@@ -13,8 +13,9 @@
     <FileVersion>0.2.0.0</FileVersion>
     <BuildTimeUtc>$([System.DateTime]::UtcNow.ToString('O'))</BuildTimeUtc>
     <ApplicationIcon>Resources\SWS.ico</ApplicationIcon>
+    <SelfContained>false</SelfContained>
     <PublishSingleFile>true</PublishSingleFile>
-    <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
+    <EnableCompressionInSingleFile>false</EnableCompressionInSingleFile>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)' == 'Release'">

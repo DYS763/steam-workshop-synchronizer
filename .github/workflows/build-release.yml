@@ -35,7 +35,7 @@ jobs:
       - name: Build
         run: dotnet build $env:PROJECT --configuration Release --no-restore
 
-      - name: Publish self-contained Windows package
+      - name: Publish framework-dependent Windows package
         if: startsWith(github.ref, 'refs/tags/v')
         shell: pwsh
         run: |
@@ -43,9 +43,10 @@ jobs:
           dotnet publish $env:PROJECT `
             --configuration Release `
             --runtime win-x64 `
-            --self-contained true `
+            --self-contained false `
             --output $publishDir `
             -p:PublishSingleFile=true `
+            -p:EnableCompressionInSingleFile=false `
             -p:IncludeNativeLibrariesForSelfExtract=true
           $archivePath = Join-Path $env:GITHUB_WORKSPACE 'SteamWorkshopSynchronizer-win-x64.zip'
           Compress-Archive -Path (Join-Path $publishDir '*') -DestinationPath $archivePath -Force

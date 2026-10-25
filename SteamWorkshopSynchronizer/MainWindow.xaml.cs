@@ -10,6 +10,8 @@ using System.IO;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Media;
+using System.Windows.Media.Animation;
 
 namespace SteamWorkshopSynchronizer;
 
@@ -76,6 +78,18 @@ public partial class MainWindow : Window, INotifyPropertyChanged
     {
         Loaded -= MainWindow_Loaded;
         services.Logger.Info("界面", "主窗口加载完成，开始首次扫描");
+        var easing = new CubicEase { EasingMode = EasingMode.EaseOut };
+        RootShell.BeginAnimation(UIElement.OpacityProperty, new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(220))
+        {
+            EasingFunction = easing
+        });
+        if (RootShell.RenderTransform is TranslateTransform translate)
+        {
+            translate.BeginAnimation(TranslateTransform.YProperty, new DoubleAnimation(12, 0, TimeSpan.FromMilliseconds(260))
+            {
+                EasingFunction = easing
+            });
+        }
         await RefreshScanAsync();
     }
 
